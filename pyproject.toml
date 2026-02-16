@@ -1,0 +1,18 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "unit: Unit tests with no external dependencies",
+    "integration: Integration tests for route/dispatch logic",
+]
+addopts = "--strict-markers -v"
+
+[tool.coverage.run]
+source = ["tools", "app"]
+omit = ["tests/*", "run.py", "app_old.py"]
+
+[tool.coverage.report]
+fail_under = 70
+show_missing = true
