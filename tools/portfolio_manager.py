@@ -1,6 +1,6 @@
 """
-Portfolio Manager — Paper trading & watchlist tracker.
-Data persists in SQLite via db.Database.
+Portfolio Manager — Paper trading tracker.
+Data persists in JSON files via tools.json_store.JsonStore.
 """
 
 import os
@@ -11,252 +11,23 @@ from datetime import datetime
 import yfinance as yf
 import pandas as pd
 
-from db import Database
-
-# ── Load default portfolios from file (fast, no seeding delay) ───────────────
-_DEFAULTS_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "portfolios.json")
-
-def _load_default_portfolios():
-    try:
-        with open(_DEFAULTS_PATH, "r") as f:
-            return json.load(f)
-    except Exception:
-        return []
-
-_DEFAULT_PORTFOLIOS = _load_default_portfolios()
-
-# ── Default sector portfolios ($10K each, equal-weight) ──────────────────────
-
-_DEFAULT_PORTFOLIOS = [
-    {
-        "id": "space-satellites", "name": "Space & Satellites", "capital": 10000.0, "created": "2025-01-01",
-        "positions": [
-            {"ticker": "ASTS", "shares": 40.0, "avg_cost": 25.00, "added_date": "2025-01-01"},
-            {"ticker": "RKLB", "shares": 35.0, "avg_cost": 28.57, "added_date": "2025-01-01"},
-            {"ticker": "IRDM", "shares": 30.0, "avg_cost": 33.33, "added_date": "2025-01-01"},
-            {"ticker": "GSAT", "shares": 175.0, "avg_cost": 5.71, "added_date": "2025-01-01"},
-            {"ticker": "PL", "shares": 250.0, "avg_cost": 4.00, "added_date": "2025-01-01"},
-            {"ticker": "GRMN", "shares": 5.0, "avg_cost": 200.00, "added_date": "2025-01-01"},
-            {"ticker": "SATS", "shares": 35.0, "avg_cost": 28.57, "added_date": "2025-01-01"},
-            {"ticker": "LHX", "shares": 4.5, "avg_cost": 222.22, "added_date": "2025-01-01"},
-            {"ticker": "LMT", "shares": 2.0, "avg_cost": 500.00, "added_date": "2025-01-01"},
-            {"ticker": "UFO", "shares": 33.0, "avg_cost": 30.30, "added_date": "2025-01-01"},
-        ],
-    },
-    {
-        "id": "defense-military", "name": "Defense & Military", "capital": 10000.0, "created": "2025-01-01",
-        "positions": [
-            {"ticker": "LMT", "shares": 2.0, "avg_cost": 500.00, "added_date": "2025-01-01"},
-            {"ticker": "NOC", "shares": 2.0, "avg_cost": 500.00, "added_date": "2025-01-01"},
-            {"ticker": "RTX", "shares": 8.0, "avg_cost": 125.00, "added_date": "2025-01-01"},
-            {"ticker": "GD", "shares": 3.5, "avg_cost": 285.71, "added_date": "2025-01-01"},
-            {"ticker": "BA", "shares": 5.0, "avg_cost": 200.00, "added_date": "2025-01-01"},
-            {"ticker": "LHX", "shares": 4.5, "avg_cost": 222.22, "added_date": "2025-01-01"},
-            {"ticker": "LDOS", "shares": 6.5, "avg_cost": 153.85, "added_date": "2025-01-01"},
-            {"ticker": "HII", "shares": 5.0, "avg_cost": 200.00, "added_date": "2025-01-01"},
-            {"ticker": "KTOS", "shares": 35.0, "avg_cost": 28.57, "added_date": "2025-01-01"},
-            {"ticker": "ITA", "shares": 7.0, "avg_cost": 142.86, "added_date": "2025-01-01"},
-        ],
-    },
-    {
-        "id": "quantum", "name": "Quantum Computing", "capital": 10000.0, "created": "2025-01-01",
-        "positions": [
-            {"ticker": "IONQ", "shares": 25.0, "avg_cost": 40.00, "added_date": "2025-01-01"},
-            {"ticker": "RGTI", "shares": 70.0, "avg_cost": 14.29, "added_date": "2025-01-01"},
-            {"ticker": "QBTS", "shares": 100.0, "avg_cost": 10.00, "added_date": "2025-01-01"},
-            {"ticker": "IBM", "shares": 4.0, "avg_cost": 250.00, "added_date": "2025-01-01"},
-            {"ticker": "GOOGL", "shares": 5.5, "avg_cost": 181.82, "added_date": "2025-01-01"},
-            {"ticker": "MSFT", "shares": 2.3, "avg_cost": 434.78, "added_date": "2025-01-01"},
-            {"ticker": "NVDA", "shares": 7.0, "avg_cost": 142.86, "added_date": "2025-01-01"},
-            {"ticker": "INTC", "shares": 45.0, "avg_cost": 22.22, "added_date": "2025-01-01"},
-            {"ticker": "HON", "shares": 4.5, "avg_cost": 222.22, "added_date": "2025-01-01"},
-            {"ticker": "QTUM", "shares": 12.0, "avg_cost": 83.33, "added_date": "2025-01-01"},
-        ],
-    },
-    {
-        "id": "healthcare", "name": "Healthcare Large Cap", "capital": 10000.0, "created": "2025-01-01",
-        "positions": [
-            {"ticker": "LLY", "shares": 1.2, "avg_cost": 833.33, "added_date": "2025-01-01"},
-            {"ticker": "JNJ", "shares": 6.0, "avg_cost": 166.67, "added_date": "2025-01-01"},
-            {"ticker": "UNH", "shares": 1.8, "avg_cost": 555.56, "added_date": "2025-01-01"},
-            {"ticker": "ABBV", "shares": 5.5, "avg_cost": 181.82, "added_date": "2025-01-01"},
-            {"ticker": "MRK", "shares": 9.0, "avg_cost": 111.11, "added_date": "2025-01-01"},
-            {"ticker": "PFE", "shares": 35.0, "avg_cost": 28.57, "added_date": "2025-01-01"},
-            {"ticker": "ABT", "shares": 8.0, "avg_cost": 125.00, "added_date": "2025-01-01"},
-            {"ticker": "MDT", "shares": 11.0, "avg_cost": 90.91, "added_date": "2025-01-01"},
-            {"ticker": "TMO", "shares": 1.8, "avg_cost": 555.56, "added_date": "2025-01-01"},
-            {"ticker": "MCK", "shares": 1.5, "avg_cost": 666.67, "added_date": "2025-01-01"},
-        ],
-    },
-    {
-        "id": "major-banks", "name": "Major Banks", "capital": 10000.0, "created": "2025-01-01",
-        "positions": [
-            {"ticker": "JPM", "shares": 4.0, "avg_cost": 250.00, "added_date": "2025-01-01"},
-            {"ticker": "BAC", "shares": 22.0, "avg_cost": 45.45, "added_date": "2025-01-01"},
-            {"ticker": "WFC", "shares": 14.0, "avg_cost": 71.43, "added_date": "2025-01-01"},
-            {"ticker": "C", "shares": 14.0, "avg_cost": 71.43, "added_date": "2025-01-01"},
-            {"ticker": "GS", "shares": 1.8, "avg_cost": 555.56, "added_date": "2025-01-01"},
-            {"ticker": "MS", "shares": 8.0, "avg_cost": 125.00, "added_date": "2025-01-01"},
-            {"ticker": "USB", "shares": 20.0, "avg_cost": 50.00, "added_date": "2025-01-01"},
-            {"ticker": "PNC", "shares": 5.0, "avg_cost": 200.00, "added_date": "2025-01-01"},
-            {"ticker": "TFC", "shares": 22.0, "avg_cost": 45.45, "added_date": "2025-01-01"},
-            {"ticker": "COF", "shares": 5.5, "avg_cost": 181.82, "added_date": "2025-01-01"},
-        ],
-    },
-    {
-        "id": "fintech", "name": "Fintech Leaders", "capital": 10000.0, "created": "2025-01-01",
-        "positions": [
-            {"ticker": "V", "shares": 3.0, "avg_cost": 333.33, "added_date": "2025-01-01"},
-            {"ticker": "MA", "shares": 1.8, "avg_cost": 555.56, "added_date": "2025-01-01"},
-            {"ticker": "PYPL", "shares": 12.0, "avg_cost": 83.33, "added_date": "2025-01-01"},
-            {"ticker": "XYZ", "shares": 12.0, "avg_cost": 83.33, "added_date": "2025-01-01"},
-            {"ticker": "FISV", "shares": 4.5, "avg_cost": 222.22, "added_date": "2025-01-01"},
-            {"ticker": "GPN", "shares": 8.0, "avg_cost": 125.00, "added_date": "2025-01-01"},
-            {"ticker": "INTU", "shares": 1.5, "avg_cost": 666.67, "added_date": "2025-01-01"},
-            {"ticker": "ADYEY", "shares": 70.0, "avg_cost": 14.29, "added_date": "2025-01-01"},
-            {"ticker": "NU", "shares": 70.0, "avg_cost": 14.29, "added_date": "2025-01-01"},
-            {"ticker": "COIN", "shares": 4.0, "avg_cost": 250.00, "added_date": "2025-01-01"},
-        ],
-    },
-    {
-        "id": "ai-hardware", "name": "AI Hardware & Infrastructure", "capital": 10000.0, "created": "2025-01-01",
-        "positions": [
-            {"ticker": "NVDA", "shares": 7.0, "avg_cost": 142.86, "added_date": "2025-01-01"},
-            {"ticker": "AMD", "shares": 8.0, "avg_cost": 125.00, "added_date": "2025-01-01"},
-            {"ticker": "AVGO", "shares": 5.0, "avg_cost": 200.00, "added_date": "2025-01-01"},
-            {"ticker": "TSM", "shares": 5.0, "avg_cost": 200.00, "added_date": "2025-01-01"},
-            {"ticker": "ASML", "shares": 1.3, "avg_cost": 769.23, "added_date": "2025-01-01"},
-            {"ticker": "AMAT", "shares": 5.5, "avg_cost": 181.82, "added_date": "2025-01-01"},
-            {"ticker": "MU", "shares": 9.0, "avg_cost": 111.11, "added_date": "2025-01-01"},
-            {"ticker": "ANET", "shares": 10.0, "avg_cost": 100.00, "added_date": "2025-01-01"},
-            {"ticker": "VRT", "shares": 8.0, "avg_cost": 125.00, "added_date": "2025-01-01"},
-            {"ticker": "SMH", "shares": 3.5, "avg_cost": 285.71, "added_date": "2025-01-01"},
-        ],
-    },
-    {
-        "id": "real-estate", "name": "Real Estate & REITs", "capital": 10000.0, "created": "2025-01-01",
-        "positions": [
-            {"ticker": "VNQ", "shares": 11.0, "avg_cost": 90.91, "added_date": "2025-01-01"},
-            {"ticker": "XLRE", "shares": 22.0, "avg_cost": 45.45, "added_date": "2025-01-01"},
-            {"ticker": "PLD", "shares": 8.0, "avg_cost": 125.00, "added_date": "2025-01-01"},
-            {"ticker": "AMT", "shares": 4.5, "avg_cost": 222.22, "added_date": "2025-01-01"},
-            {"ticker": "EQIX", "shares": 1.1, "avg_cost": 909.09, "added_date": "2025-01-01"},
-            {"ticker": "DLR", "shares": 6.0, "avg_cost": 166.67, "added_date": "2025-01-01"},
-            {"ticker": "O", "shares": 17.0, "avg_cost": 58.82, "added_date": "2025-01-01"},
-            {"ticker": "WELL", "shares": 7.0, "avg_cost": 142.86, "added_date": "2025-01-01"},
-            {"ticker": "SPG", "shares": 6.0, "avg_cost": 166.67, "added_date": "2025-01-01"},
-            {"ticker": "SRVR", "shares": 28.0, "avg_cost": 35.71, "added_date": "2025-01-01"},
-        ],
-    },
-    {
-        "id": "nuclear-uranium", "name": "Nuclear & Uranium", "capital": 10000.0, "created": "2025-01-01",
-        "positions": [
-            {"ticker": "CEG", "shares": 3.0, "avg_cost": 333.33, "added_date": "2025-01-01"},
-            {"ticker": "CCJ", "shares": 18.0, "avg_cost": 55.56, "added_date": "2025-01-01"},
-            {"ticker": "BWXT", "shares": 8.0, "avg_cost": 125.00, "added_date": "2025-01-01"},
-            {"ticker": "LEU", "shares": 12.0, "avg_cost": 83.33, "added_date": "2025-01-01"},
-            {"ticker": "SMR", "shares": 35.0, "avg_cost": 28.57, "added_date": "2025-01-01"},
-            {"ticker": "OKLO", "shares": 35.0, "avg_cost": 28.57, "added_date": "2025-01-01"},
-            {"ticker": "UEC", "shares": 125.0, "avg_cost": 8.00, "added_date": "2025-01-01"},
-            {"ticker": "UUUU", "shares": 125.0, "avg_cost": 8.00, "added_date": "2025-01-01"},
-            {"ticker": "URA", "shares": 35.0, "avg_cost": 28.57, "added_date": "2025-01-01"},
-            {"ticker": "URNM", "shares": 22.0, "avg_cost": 45.45, "added_date": "2025-01-01"},
-        ],
-    },
-    {
-        "id": "dividends", "name": "Dividend Beasts", "capital": 10000.0, "created": "2025-01-01",
-        "positions": [
-            {"ticker": "SCHD", "shares": 35.0, "avg_cost": 28.57, "added_date": "2025-01-01"},
-            {"ticker": "VYM", "shares": 8.0, "avg_cost": 125.00, "added_date": "2025-01-01"},
-            {"ticker": "SPYD", "shares": 22.0, "avg_cost": 45.45, "added_date": "2025-01-01"},
-            {"ticker": "JEPI", "shares": 17.0, "avg_cost": 58.82, "added_date": "2025-01-01"},
-            {"ticker": "O", "shares": 17.0, "avg_cost": 58.82, "added_date": "2025-01-01"},
-            {"ticker": "MO", "shares": 17.0, "avg_cost": 58.82, "added_date": "2025-01-01"},
-            {"ticker": "VZ", "shares": 22.0, "avg_cost": 45.45, "added_date": "2025-01-01"},
-            {"ticker": "T", "shares": 35.0, "avg_cost": 28.57, "added_date": "2025-01-01"},
-            {"ticker": "EPD", "shares": 33.0, "avg_cost": 30.30, "added_date": "2025-01-01"},
-            {"ticker": "ET", "shares": 55.0, "avg_cost": 18.18, "added_date": "2025-01-01"},
-        ],
-    },
-    {
-        "id": "bigbox-retail", "name": "Big Box & Home Improvement", "capital": 10000.0, "created": "2025-01-01",
-        "positions": [
-            {"ticker": "HD", "shares": 2.5, "avg_cost": 400.00, "added_date": "2025-01-01"},
-            {"ticker": "LOW", "shares": 3.5, "avg_cost": 285.71, "added_date": "2025-01-01"},
-            {"ticker": "COST", "shares": 1.0, "avg_cost": 1000.00, "added_date": "2025-01-01"},
-            {"ticker": "WMT", "shares": 11.0, "avg_cost": 90.91, "added_date": "2025-01-01"},
-            {"ticker": "TGT", "shares": 7.0, "avg_cost": 142.86, "added_date": "2025-01-01"},
-            {"ticker": "TSCO", "shares": 3.5, "avg_cost": 285.71, "added_date": "2025-01-01"},
-            {"ticker": "FND", "shares": 9.0, "avg_cost": 111.11, "added_date": "2025-01-01"},
-            {"ticker": "SHW", "shares": 2.5, "avg_cost": 400.00, "added_date": "2025-01-01"},
-            {"ticker": "FAST", "shares": 12.0, "avg_cost": 83.33, "added_date": "2025-01-01"},
-            {"ticker": "GWW", "shares": 1.0, "avg_cost": 1000.00, "added_date": "2025-01-01"},
-        ],
-    },
-    {
-        "id": "defense-adjacent", "name": "Defense Adjacents", "capital": 10000.0, "created": "2025-01-01",
-        "positions": [
-            {"ticker": "BAH", "shares": 6.0, "avg_cost": 166.67, "added_date": "2025-01-01"},
-            {"ticker": "CACI", "shares": 2.2, "avg_cost": 454.55, "added_date": "2025-01-01"},
-            {"ticker": "SAIC", "shares": 7.0, "avg_cost": 142.86, "added_date": "2025-01-01"},
-            {"ticker": "LDOS", "shares": 6.5, "avg_cost": 153.85, "added_date": "2025-01-01"},
-            {"ticker": "AVAV", "shares": 5.0, "avg_cost": 200.00, "added_date": "2025-01-01"},
-            {"ticker": "KTOS", "shares": 35.0, "avg_cost": 28.57, "added_date": "2025-01-01"},
-            {"ticker": "VSAT", "shares": 25.0, "avg_cost": 40.00, "added_date": "2025-01-01"},
-            {"ticker": "TDY", "shares": 2.0, "avg_cost": 500.00, "added_date": "2025-01-01"},
-            {"ticker": "PLTR", "shares": 8.0, "avg_cost": 125.00, "added_date": "2025-01-01"},
-            {"ticker": "CIBR", "shares": 16.0, "avg_cost": 62.50, "added_date": "2025-01-01"},
-        ],
-    },
-    {
-        "id": "mag7", "name": "MAG 7", "capital": 10000.0, "created": "2025-01-01",
-        "positions": [
-            {"ticker": "AAPL", "shares": 5.18, "avg_cost": 275.00, "added_date": "2025-01-01"},
-            {"ticker": "MSFT", "shares": 3.14, "avg_cost": 455.00, "added_date": "2025-01-01"},
-            {"ticker": "GOOGL", "shares": 5.91, "avg_cost": 192.00, "added_date": "2025-01-01"},
-            {"ticker": "AMZN", "shares": 6.02, "avg_cost": 237.00, "added_date": "2025-01-01"},
-            {"ticker": "NVDA", "shares": 7.77, "avg_cost": 138.00, "added_date": "2025-01-01"},
-            {"ticker": "META", "shares": 2.87, "avg_cost": 593.00, "added_date": "2025-01-01"},
-            {"ticker": "TSLA", "shares": 6.88, "avg_cost": 391.00, "added_date": "2025-01-01"},
-        ],
-    },
-]
+from tools.json_store import JsonStore
 
 
 class PortfolioManager:
     def __init__(self):
-        self.db = Database()
-        self._seed_defaults()
+        self.db = JsonStore()
         self._positions_cache = {}
         self._risk_cache = {}
         self._chart_cache = {}
 
-    def _seed_defaults(self):
-        existing = {p["id"] for p in self.db.get_portfolios()}
-        for p in _DEFAULT_PORTFOLIOS:
-            if p["id"] not in existing:
-                self.db.create_portfolio(p)
-
     def _invalidate_runtime_caches(self, pid):
-        self._positions_cache = {
-            key: value
-            for key, value in self._positions_cache.items()
-            if key[0] != pid
-        }
-        self._risk_cache = {
-            key: value
-            for key, value in self._risk_cache.items()
-            if key[0] != pid
-        }
-        self._chart_cache = {
-            key: value
-            for key, value in self._chart_cache.items()
-            if key[0] != pid
-        }
+        self._positions_cache = {k: v for k, v in self._positions_cache.items() if k[0] != pid}
+        self._risk_cache = {k: v for k, v in self._risk_cache.items() if k[0] != pid}
+        self._chart_cache = {k: v for k, v in self._chart_cache.items() if k[0] != pid}
 
     def _portfolio_signature(self, portfolio):
-        import json as _json
-        return _json.dumps(
+        return json.dumps(
             {
                 "capital": round(float(portfolio.get("capital", 0)), 6),
                 "positions": [
@@ -294,23 +65,16 @@ class PortfolioManager:
         if not portfolio:
             return None
 
-        # Check for existing position
         for pos in portfolio.get("positions", []):
             if pos["ticker"] == ticker:
                 total_shares = float(pos["shares"]) + float(shares)
                 total_cost = float(pos["shares"]) * float(pos["avg_cost"]) + float(shares) * float(avg_cost)
                 new_avg = round(total_cost / total_shares, 6) if total_shares else float(pos["avg_cost"])
-                self.db.update_position(
-                    portfolio_id,
-                    ticker,
-                    {"shares": round(total_shares, 6), "avg_cost": new_avg},
-                )
+                self.db.update_position(portfolio_id, ticker, {"shares": round(total_shares, 6), "avg_cost": new_avg})
                 self._invalidate_runtime_caches(portfolio_id)
-                # Record trade
                 self.record_trade(portfolio_id, ticker, "add", float(shares), float(avg_cost))
                 return {**pos, "shares": round(total_shares, 6), "avg_cost": new_avg}
 
-        # New position
         pos = {
             "ticker": ticker,
             "shares": round(float(shares), 6),
@@ -319,7 +83,6 @@ class PortfolioManager:
         }
         self.db.add_position(portfolio_id, pos)
         self._invalidate_runtime_caches(portfolio_id)
-        # Record trade
         self.record_trade(portfolio_id, ticker, "buy", float(shares), float(avg_cost))
         return pos
 
@@ -330,13 +93,7 @@ class PortfolioManager:
             return False
         for pos in portfolio.get("positions", []):
             if pos["ticker"] == ticker:
-                self.record_trade(
-                    portfolio_id,
-                    ticker,
-                    "sell",
-                    float(pos["shares"]),
-                    float(pos.get("avg_cost", 0)),
-                )
+                self.record_trade(portfolio_id, ticker, "sell", float(pos["shares"]), float(pos.get("avg_cost", 0)))
                 break
         ok = self.db.remove_position(portfolio_id, ticker)
         if ok:
@@ -349,11 +106,9 @@ class PortfolioManager:
         if not portfolio:
             return False
 
-        # Remove all current positions
         for pos in portfolio.get("positions", []):
             self.db.remove_position(portfolio_id, pos["ticker"])
 
-        # Add new positions
         for pos in new_positions:
             if float(pos.get("shares", 0)) > 0:
                 self.db.add_position(
@@ -458,11 +213,7 @@ class PortfolioManager:
         cash = round(portfolio.get("capital", 0.0) - total_cost, 2)
 
         out = (results, cash)
-        self._positions_cache = {
-            key: value
-            for key, value in self._positions_cache.items()
-            if key[0] != portfolio_id
-        }
+        self._positions_cache = {k: v for k, v in self._positions_cache.items() if k[0] != portfolio_id}
         self._positions_cache[cache_key] = {"value": deepcopy(out), "timestamp": time.time()}
         return out
 
@@ -477,7 +228,6 @@ class PortfolioManager:
         total_gain = total_value - portfolio.get("capital", 0.0)
         total_gain_pct = (total_gain / portfolio["capital"] * 100) if portfolio.get("capital") else 0
 
-        # Calculate Risk Metrics
         risk = self.calculate_risk_metrics(portfolio_id)
 
         return {
@@ -505,24 +255,20 @@ class PortfolioManager:
         all_tickers = tickers + [benchmark]
 
         try:
-            # Get 1 year of daily data
             data = yf.download(all_tickers, period="1y", interval="1d", progress=False, auto_adjust=True, threads=False)["Close"]
             if isinstance(data, pd.Series):
                 data = data.to_frame(name=tickers[0])
 
             returns = data.pct_change().dropna()
 
-            # Filter to only tickers that actually downloaded successfully
             available_tickers = [t for t in tickers if t in returns.columns]
             if not available_tickers or benchmark not in returns.columns:
                 risk = {"volatility": 0, "beta": 0, "sharpe": 0}
                 self._risk_cache[cache_key] = {"value": deepcopy(risk), "timestamp": time.time()}
                 return risk
 
-            # Recalculate weights using only available tickers
             available_positions = [p for p in portfolio["positions"] if p["ticker"] in available_tickers]
 
-            # Calculate portfolio daily returns based on weights
             weights = []
             total_cost = sum(float(p["shares"]) * float(p["avg_cost"]) for p in available_positions)
             for p in available_positions:
@@ -532,15 +278,12 @@ class PortfolioManager:
             port_returns = (returns[available_tickers] * weights).sum(axis=1)
             bench_returns = returns[benchmark]
 
-            # 1. Volatility (Annualized)
             vol = port_returns.std() * (252**0.5) * 100
 
-            # 2. Beta
             covariance = port_returns.cov(bench_returns)
             variance = bench_returns.var()
             beta = covariance / variance if variance else 0
 
-            # 3. Sharpe Ratio (Risk-free rate assumed at 4%)
             rf = 0.04
             excess_return = port_returns.mean() * 252 - rf
             sharpe = excess_return / (port_returns.std() * (252**0.5)) if port_returns.std() else 0
@@ -550,11 +293,7 @@ class PortfolioManager:
                 "beta": round(float(beta), 2),
                 "sharpe": round(float(sharpe), 2)
             }
-            self._risk_cache = {
-                key: value
-                for key, value in self._risk_cache.items()
-                if key[0] != portfolio_id
-            }
+            self._risk_cache = {k: v for k, v in self._risk_cache.items() if k[0] != portfolio_id}
             self._risk_cache[cache_key] = {"value": deepcopy(risk), "timestamp": time.time()}
             return risk
         except Exception as e:
@@ -601,7 +340,6 @@ class PortfolioManager:
         if raw.empty:
             return {"error": "No historical data"}
 
-        # Total cost deployed
         total_cost = sum(float(p["shares"]) * float(p["avg_cost"]) for p in positions)
         cash = capital - total_cost
 
@@ -636,15 +374,11 @@ class PortfolioManager:
             "total_gain": total_gain,
             "total_gain_pct": total_gain_pct,
         }
-        self._chart_cache = {
-            key: value
-            for key, value in self._chart_cache.items()
-            if key[0] != portfolio_id or key[1] != range_param
-        }
+        self._chart_cache = {k: v for k, v in self._chart_cache.items() if k[0] != portfolio_id or k[1] != range_param}
         self._chart_cache[cache_key] = {"value": deepcopy(payload), "timestamp": time.time()}
         return payload
 
-    # ── New trade / target / nav methods ───────────────────────────────────────
+    # ── Trade / target / nav / alert methods ─────────────────────────────────
 
     def record_trade(self, portfolio_id, ticker, action, shares, price, date=None, notes=""):
         trade = {
@@ -683,7 +417,6 @@ class PortfolioManager:
         return self.db.get_nav_history(portfolio_id, days)
 
     def record_daily_nav(self, portfolio_id):
-        """Snapshot current portfolio value into nav_snapshots."""
         portfolio = self.get_portfolio(portfolio_id)
         if not portfolio:
             return False

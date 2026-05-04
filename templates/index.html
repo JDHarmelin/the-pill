@@ -499,19 +499,19 @@
 
         /* ── Tab Layout ── */
         .tab-container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 0 32px 80px;
+            padding: 0 32px 100px;
         }
 
         .tab-nav {
             display: flex;
-            gap: 20px;
+            gap: 24px;
             border-bottom: 1px solid #1a1a1a;
-            margin-bottom: 32px;
+            margin-bottom: 40px;
             padding-bottom: 2px;
             position: sticky;
-            top: 72px;
+            top: 76px;
             background: rgba(0, 0, 0, 0.9);
             backdrop-filter: blur(10px);
             z-index: 50;
@@ -524,11 +524,11 @@
             background: none;
             border: none;
             color: #555;
-            font-size: 11px;
+            font-size: 13px;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 1.5px;
-            padding: 16px 0;
+            padding: 18px 0;
             cursor: pointer;
             position: relative;
             transition: color 0.2s;
@@ -566,78 +566,83 @@
         .overview-grid {
             display: grid;
             grid-template-columns: 2fr 1fr;
-            gap: 40px;
-            margin-top: 24px;
+            gap: 48px;
+            margin-top: 32px;
         }
 
         .overview-left {
             display: flex;
             flex-direction: column;
-            gap: 24px;
+            gap: 32px;
         }
 
         .overview-right {
             display: flex;
             flex-direction: column;
-            gap: 24px;
+            gap: 32px;
         }
 
         .info-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 16px 24px;
+            gap: 20px 28px;
             background: #0a0a0a;
             border: 1px solid #1a1a1a;
-            border-radius: 12px;
-            padding: 24px;
+            border-radius: 14px;
+            padding: 28px;
         }
 
         .info-item {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 6px;
         }
 
         .info-label {
-            font-size: 11px;
+            font-size: 12px;
             color: #666;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
         .info-value {
-            font-size: 14px;
+            font-size: 15px;
             color: #fff;
             font-weight: 500;
         }
 
         .company-description {
-            font-size: 14px;
-            line-height: 1.7;
+            font-size: 15px;
+            line-height: 1.75;
             color: #999;
         }
 
         .placeholder-card {
             background: #0a0a0a;
             border: 1px solid #1a1a1a;
-            border-radius: 12px;
-            padding: 40px;
+            border-radius: 14px;
+            padding: 48px;
             text-align: center;
             color: #444;
         }
 
         .placeholder-card h3 {
-            color: #222;
-            margin-bottom: 12px;
+            color: #333;
+            margin-bottom: 14px;
+            font-size: 18px;
+        }
+
+        .placeholder-card p {
+            font-size: 15px;
         }
 
         /* ── News Items ── */
         .news-item {
             background: #0a0a0a;
             border: 1px solid #1a1a1a;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 16px;
+            border-radius: 14px;
+            padding: 28px;
+            margin-bottom: 18px;
             transition: border-color 0.2s;
         }
 
@@ -648,19 +653,19 @@
         .news-meta {
             display: flex;
             gap: 12px;
-            font-size: 11px;
+            font-size: 12px;
             color: #555;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         .news-title {
-            font-size: 16px;
+            font-size: 17px;
             font-weight: 600;
             color: #fff;
-            margin-bottom: 8px;
-            line-height: 1.4;
+            margin-bottom: 10px;
+            line-height: 1.5;
             display: block;
             text-decoration: none;
         }
@@ -670,9 +675,9 @@
         }
 
         .news-summary {
-            font-size: 14px;
+            font-size: 15px;
             color: #888;
-            line-height: 1.5;
+            line-height: 1.6;
         }
 
         .analysis-content {
@@ -746,10 +751,10 @@
 
         .chat-bubble {
             max-width: 85%;
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 13px;
-            line-height: 1.6;
+            padding: 14px 18px;
+            border-radius: 14px;
+            font-size: 14px;
+            line-height: 1.65;
         }
 
         .chat-bubble.bot {
@@ -768,7 +773,7 @@
         }
 
         .chat-input-area {
-            padding: 16px;
+            padding: 18px;
             border-top: 1px solid #111;
             display: flex;
             gap: 12px;
@@ -779,10 +784,10 @@
             flex: 1;
             background: #111;
             border: 1px solid #222;
-            border-radius: 20px;
-            padding: 12px 16px;
+            border-radius: 24px;
+            padding: 14px 18px;
             color: #fff;
-            font-size: 13px;
+            font-size: 14px;
             outline: none;
             transition: border-color 0.2s;
         }
@@ -795,8 +800,8 @@
             background: #fff;
             border: none;
             border-radius: 50%;
-            width: 42px;
-            height: 42px;
+            width: 46px;
+            height: 46px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -974,15 +979,15 @@
 
         .metric-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
         }
 
         .metric-card {
             background: #0a0a0a;
             border: 1px solid #1a1a1a;
             border-radius: 16px;
-            padding: 24px;
+            padding: 28px;
             display: flex;
             flex-direction: column;
             transition: border-color 0.2s, transform 0.2s;
@@ -997,11 +1002,11 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
         }
 
         .metric-name {
-            font-size: 13px;
+            font-size: 14px;
             color: #888;
             font-weight: 500;
             text-transform: uppercase;
@@ -1010,9 +1015,9 @@
 
         .metric-trend {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            padding: 4px 8px;
-            border-radius: 6px;
+            font-size: 13px;
+            padding: 5px 10px;
+            border-radius: 8px;
             background: #111;
         }
 
@@ -1032,10 +1037,10 @@
 
         .metric-value {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 28px;
+            font-size: 32px;
             font-weight: 600;
             color: #fff;
-            margin-bottom: 24px;
+            margin-bottom: 28px;
             letter-spacing: -1px;
         }
 
@@ -1202,16 +1207,23 @@
             </button>
             <span class="ticker-badge" id="tickerBadge"></span>
 
-            <div class="result-actions" style="margin-left:auto; display:flex; align-items:center; gap:12px;">
-                <select id="portfolioSelect"
-                    style="background:#111; color:#fff; border:1px solid #333; padding:6px 12px; border-radius:4px; font-size:13px; outline:none; display:none;">
+            <div class="result-actions" style="margin-left:auto; display:flex; align-items:center; gap:10px;">
+                <a href="/dashboard" class="btn btn-ghost">Dashboard</a>
+                <a href="/portfolio" class="btn btn-ghost">Portfolio</a>
+                <button class="btn btn-ghost" id="refreshBtn" title="Refresh data">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+                    </svg>
+                    Refresh
+                </button>
+                <select id="portfolioSelect" class="btn btn-accent"
+                    style="display:none; appearance:none; -webkit-appearance:none; padding-right:28px; background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23666%22 stroke-width=%222%22%3E%3Cpath d=%22M6 9l6 6 6-6%22/%3E%3C/svg%3E'); background-repeat:no-repeat; background-position:right 10px center;">
                     <option value="">Select Portfolio...</option>
                 </select>
-                <button class="action-btn" id="addToPortfolioBtn"
-                    style="background:#fff; color:#000; border:none; padding:6px 16px; border-radius:4px; font-size:13px; font-weight:600; cursor:pointer; display:none; transition:opacity 0.2s;">
-                    Add to Portfolio
+                <button class="btn btn-solid" id="addToPortfolioBtn" style="display:none;">
+                    + Add to Portfolio
                 </button>
-                <span class="pill-logo" style="margin-left: 24px;">THE PILL</span>
+                <span class="pill-logo" style="margin-left: 16px;">THE PILL</span>
             </div>
         </header>
 
@@ -1222,17 +1234,22 @@
                     <div class="current-price" id="chartCurrentPrice">—</div>
                     <div class="price-change" id="chartPriceChange">—</div>
                 </div>
-                <div class="range-selector">
-                    <button class="range-btn" data-range="1d">1D</button>
-                    <button class="range-btn" data-range="1w">1W</button>
-                    <button class="range-btn" data-range="1m">1M</button>
-                    <button class="range-btn" data-range="3m">3M</button>
-                    <button class="range-btn" data-range="6m">6M</button>
-                    <button class="range-btn" data-range="ytd">YTD</button>
-                    <button class="range-btn active" data-range="1y">1Y</button>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div class="range-selector">
+                        <button class="range-btn" data-range="1D">1D</button>
+                        <button class="range-btn" data-range="1W">1W</button>
+                        <button class="range-btn" data-range="1M">1M</button>
+                        <button class="range-btn" data-range="3M">3M</button>
+                        <button class="range-btn" data-range="6M">6M</button>
+                        <button class="range-btn active" data-range="12M">1Y</button>
+                    </div>
+                    <a href="#" id="tvOpenBtn" target="_blank" rel="noopener"
+                       class="btn btn-ghost" style="display:none;">
+                        Open in TradingView →
+                    </a>
                 </div>
             </div>
-            <div id="lwChart"></div>
+            <div id="tvChartContainer"></div>
             <div class="chart-skeleton" id="chartSkeleton">
                 <div class="chart-skeleton-bar"></div>
             </div>
@@ -1367,10 +1384,12 @@
         const newsContent = document.getElementById('newsContent');
         const shkreliContent = document.getElementById('shkreliContent');
         const chartSection = document.getElementById('chartSection');
-        const lwChartEl = document.getElementById('lwChart');
+        const tvChartContainer = document.getElementById('tvChartContainer');
         const chartSkeleton = document.getElementById('chartSkeleton');
         const chartPriceEl = document.getElementById('chartCurrentPrice');
         const chartChangeEl = document.getElementById('chartPriceChange');
+        const tvOpenBtn = document.getElementById('tvOpenBtn');
+        const refreshBtn = document.getElementById('refreshBtn');
         const autocomplete = document.getElementById('autocompleteDropdown');
 
         marked.setOptions({ breaks: true, gfm: true });
@@ -1570,11 +1589,19 @@
         }
 
         // ── Chart state ──────────────────────────────────────────────────────
-        let chart = null;
-        let areaSeries = null;
-        let currentRange = '1y';
-        let pendingChartData = null;   // fetched but waiting for analysis to start
+        let tvWidget = null;
+        let currentRange = '12M';
+        let pendingChartData = null;
         let analysisHasStarted = false;
+
+        const TV_INTERVAL_MAP = {
+            '1D': '5',
+            '1W': '60',
+            '1M': '240',
+            '3M': 'D',
+            '6M': 'D',
+            '12M': 'W',
+        };
 
         function setRangeActive(range) {
             document.querySelectorAll('.range-btn').forEach(b =>
@@ -1598,60 +1625,53 @@
             }
         }
 
+        function renderTradingViewChart(ticker, range) {
+            const symbol = ticker.toUpperCase();
+            const interval = TV_INTERVAL_MAP[range] || 'D';
+
+            tvChartContainer.innerHTML = '';
+
+            tvWidget = new TradingView.widget({
+                container_id: 'tvChartContainer',
+                symbol: symbol,
+                interval: interval,
+                timezone: 'America/New_York',
+                theme: 'dark',
+                style: '1',
+                locale: 'en',
+                toolbar_bg: '#000000',
+                enable_publishing: false,
+                hide_top_toolbar: false,
+                hide_legend: false,
+                save_image: true,
+                calendar: false,
+                studies: ['RSI@tv-basicstudies', 'MACD@tv-basicstudies'],
+                width: '100%',
+                height: 480,
+                withdateranges: false,
+                hide_side_toolbar: false,
+                allow_symbol_change: false,
+                details: false,
+                hotlist: false,
+            });
+
+            tvOpenBtn.href = `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(symbol)}`;
+            tvOpenBtn.style.display = 'inline-flex';
+        }
+
         function renderChartLine(data) {
             chartSection.style.display = 'block';
             updatePriceDisplay(data);
-            const isPos = (data.period_change_pct || 0) >= 0;
-            const lineColor = isPos ? '#4ade80' : '#f87171';
-            const topColor = isPos ? 'rgba(74,222,128,0.12)' : 'rgba(248,113,113,0.12)';
-
-            // Always destroy + recreate to safely switch between intraday/daily time types
-            if (chart) { chart.remove(); chart = null; areaSeries = null; }
-            lwChartEl.innerHTML = '';
-
-            chart = LightweightCharts.createChart(lwChartEl, {
-                width: lwChartEl.clientWidth,
-                height: 260,
-                layout: { background: { type: 'solid', color: '#000000' }, textColor: '#555555' },
-                grid: { vertLines: { color: '#111111' }, horzLines: { color: '#111111' } },
-                rightPriceScale: { borderVisible: false, textColor: '#555555' },
-                timeScale: { borderVisible: false, textColor: '#555555', fixLeftEdge: true, fixRightEdge: true },
-                crosshair: {
-                    horzLine: { visible: false, labelVisible: false },
-                    vertLine: { color: '#333333', style: 1, labelVisible: false },
-                },
-                handleScroll: false,
-                handleScale: false,
-            });
-
-            areaSeries = chart.addAreaSeries({
-                lineColor, topColor,
-                bottomColor: 'rgba(0,0,0,0)',
-                lineWidth: 1.5,
-                crosshairMarkerVisible: true,
-                crosshairMarkerRadius: 4,
-                crosshairMarkerBorderColor: '#000',
-                priceLineVisible: false,
-                lastValueVisible: false,
-            });
-
-            areaSeries.setData(data.data.map(d => ({ time: d.time, value: d.close })));
-            chart.timeScale().fitContent();
-
-            new ResizeObserver(() => {
-                if (chart) chart.applyOptions({ width: lwChartEl.clientWidth });
-            }).observe(lwChartEl);
-
+            renderTradingViewChart(data.ticker || currentTicker, currentRange);
             chartSkeleton.style.display = 'none';
-            lwChartEl.style.display = 'block';
+            tvChartContainer.style.display = 'block';
         }
 
         async function loadChart(ticker, range) {
             currentRange = range;
             setRangeActive(range);
 
-            // Reset chart visuals for new fetch
-            lwChartEl.style.display = 'none';
+            tvChartContainer.style.display = 'none';
             chartSkeleton.style.display = 'flex';
 
             try {
@@ -1662,14 +1682,13 @@
                 if (analysisHasStarted) {
                     renderChartLine(data);
                 } else {
-                    // Store for sync reveal with analysis — price shows then too
                     pendingChartData = data;
                 }
             } catch (err) {
                 console.error('Chart error:', err);
                 chartSkeleton.style.display = 'none';
-                lwChartEl.innerHTML = `<div class="placeholder-card" style="border:none; background:none;"><h3>Chart Unavailable</h3><p>${err.message}</p></div>`;
-                lwChartEl.style.display = 'block';
+                tvChartContainer.innerHTML = `<div class="placeholder-card" style="border:none; background:none;"><h3>Chart Unavailable</h3><p>${err.message}</p></div>`;
+                tvChartContainer.style.display = 'block';
                 chartSection.style.display = 'block';
             }
         }
@@ -1691,6 +1710,15 @@
                 const ticker = tickerBadge.textContent;
                 if (ticker) loadChart(ticker, btn.dataset.range);
             });
+        });
+
+        // Refresh button
+        refreshBtn.addEventListener('click', () => {
+            const ticker = tickerBadge.textContent;
+            if (!ticker) return;
+            resetTabDataState(ticker);
+            loadChart(ticker, currentRange);
+            ensureTabData('overview');
         });
 
         // ── Autocomplete ─────────────────────────────────────────────────────
@@ -1780,9 +1808,8 @@
             // Reset all state
             analysisHasStarted = false;
             pendingChartData = null;
-            chart = null;
-            areaSeries = null;
-            currentRange = '1y';
+            tvWidget = null;
+            currentRange = '12M';
 
             searchPage.style.display = 'none';
             resultsPage.style.display = 'block';
@@ -1850,21 +1877,21 @@
             document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('active', p.id === 'pane-overview'));
 
             // Reset chart UI
-            lwChartEl.style.display = 'none';
-            lwChartEl.innerHTML = '';
+            tvChartContainer.style.display = 'none';
+            tvChartContainer.innerHTML = '';
             chartSkeleton.style.display = 'flex';
             chartPriceEl.textContent = '—';
             chartChangeEl.textContent = '—';
             chartChangeEl.className = 'price-change';
-            chartSection.style.display = 'none';  // hidden until sync reveal
-            setRangeActive('1y');
+            chartSection.style.display = 'none';
+            setRangeActive('12M');
 
             // Prioritize the streaming analysis request before secondary fetches.
             runAnalysis(ticker);
 
             // Defer secondary data fetches one turn so the EventSource can connect first.
             setTimeout(() => {
-                loadChart(ticker, '1y');
+                loadChart(ticker, '12M');
 
                 const revealDataShell = () => {
                     tabContainer.style.display = 'block';

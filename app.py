@@ -1028,8 +1028,7 @@ def get_watchlist_mgr():
     global _watchlist_mgr
     if _watchlist_mgr is None:
         from tools.watchlist_manager import WatchlistManager
-        from db import Database
-        _watchlist_mgr = WatchlistManager(Database())
+        _watchlist_mgr = WatchlistManager()
     return _watchlist_mgr
 
 

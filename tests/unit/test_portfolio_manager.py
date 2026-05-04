@@ -19,6 +19,12 @@ def mgr(tmp_path):
     with patch("db.Database.__init__", mock_db_init):
         if os.path.exists(db_path):
             os.remove(db_path)
+        # Isolate from any persisted price cache
+        try:
+            from tools.price_cache import get_price_cache
+            get_price_cache()._data = {}
+        except Exception:
+            pass
         yield PortfolioManager()
 
 

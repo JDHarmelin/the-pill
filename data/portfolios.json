@@ -864,5 +864,152 @@
         "added_date": "2025-01-01"
       }
     ]
+  },
+  {
+    "id": "6b2e959b",
+    "name": "Test Portfolio",
+    "capital": 5000.0,
+    "strategy": "custom",
+    "benchmark": "SPY",
+    "risk_tolerance": "moderate",
+    "rebalance_schedule": "manual",
+    "created": "2026-05-04",
+    "positions": []
+  },
+  {
+    "id": "914bb0b3",
+    "name": "Get Test",
+    "capital": 10000.0,
+    "strategy": "custom",
+    "benchmark": "SPY",
+    "risk_tolerance": "moderate",
+    "rebalance_schedule": "manual",
+    "created": "2026-05-04",
+    "positions": []
+  },
+  {
+    "id": "b23ce3c7",
+    "name": "Cap Update",
+    "capital": 2000.0,
+    "strategy": "custom",
+    "benchmark": "SPY",
+    "risk_tolerance": "moderate",
+    "rebalance_schedule": "manual",
+    "created": "2026-05-04",
+    "positions": []
+  },
+  {
+    "id": "29f1a6db",
+    "name": "Position Test",
+    "capital": 10000.0,
+    "strategy": "custom",
+    "benchmark": "SPY",
+    "risk_tolerance": "moderate",
+    "rebalance_schedule": "manual",
+    "created": "2026-05-04",
+    "positions": [
+      {
+        "ticker": "AAPL",
+        "shares": 20.0,
+        "avg_cost": 155.0,
+        "added_date": "2026-05-04",
+        "tags": null,
+        "target_weight": null,
+        "stop_loss": null,
+        "take_profit": null,
+        "notes": null
+      }
+    ]
+  },
+  {
+    "id": "45a71d28",
+    "name": "Remove Test",
+    "capital": 10000.0,
+    "strategy": "custom",
+    "benchmark": "SPY",
+    "risk_tolerance": "moderate",
+    "rebalance_schedule": "manual",
+    "created": "2026-05-04",
+    "positions": []
+  },
+  {
+    "id": "d18ed737",
+    "name": "Summary Test",
+    "capital": 10000.0,
+    "strategy": "custom",
+    "benchmark": "SPY",
+    "risk_tolerance": "moderate",
+    "rebalance_schedule": "manual",
+    "created": "2026-05-04",
+    "positions": [
+      {
+        "ticker": "AAPL",
+        "shares": 10.0,
+        "avg_cost": 150.0,
+        "added_date": "2026-05-04",
+        "tags": null,
+        "target_weight": null,
+        "stop_loss": null,
+        "take_profit": null,
+        "notes": null
+      }
+    ]
+  },
+  {
+    "id": "6380ff59",
+    "name": "Risk Cache Test",
+    "capital": 10000.0,
+    "strategy": "custom",
+    "benchmark": "SPY",
+    "risk_tolerance": "moderate",
+    "rebalance_schedule": "manual",
+    "created": "2026-05-04",
+    "positions": [
+      {
+        "ticker": "AAPL",
+        "shares": 10.0,
+        "avg_cost": 150.0,
+        "added_date": "2026-05-04",
+        "tags": null,
+        "target_weight": null,
+        "stop_loss": null,
+        "take_profit": null,
+        "notes": null
+      }
+    ]
+  },
+  {
+    "id": "e8ec4107",
+    "name": "Cache Test",
+    "capital": 10000.0,
+    "strategy": "custom",
+    "benchmark": "SPY",
+    "risk_tolerance": "moderate",
+    "rebalance_schedule": "manual",
+    "created": "2026-05-04",
+    "positions": [
+      {
+        "ticker": "AAPL",
+        "shares": 10.0,
+        "avg_cost": 150.0,
+        "added_date": "2026-05-04",
+        "tags": null,
+        "target_weight": null,
+        "stop_loss": null,
+        "take_profit": null,
+        "notes": null
+      }
+    ]
+  },
+  {
+    "id": "de4954bb",
+    "name": "Trading Account",
+    "capital": 10000.0,
+    "strategy": "custom",
+    "benchmark": "SPY",
+    "risk_tolerance": "moderate",
+    "rebalance_schedule": "manual",
+    "created": "2026-05-04",
+    "positions": []
   }
 ]

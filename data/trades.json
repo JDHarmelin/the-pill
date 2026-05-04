@@ -1,0 +1,82 @@
+{
+  "29f1a6db": [
+    {
+      "id": 1777868814653,
+      "portfolio_id": "29f1a6db",
+      "ticker": "AAPL",
+      "action": "add",
+      "shares": 10.0,
+      "price": 160.0,
+      "date": "2026-05-04",
+      "notes": ""
+    },
+    {
+      "id": 1777868814652,
+      "portfolio_id": "29f1a6db",
+      "ticker": "AAPL",
+      "action": "buy",
+      "shares": 10.0,
+      "price": 150.0,
+      "date": "2026-05-04",
+      "notes": ""
+    }
+  ],
+  "45a71d28": [
+    {
+      "id": 1777868814657,
+      "portfolio_id": "45a71d28",
+      "ticker": "AAPL",
+      "action": "sell",
+      "shares": 10.0,
+      "price": 150.0,
+      "date": "2026-05-04",
+      "notes": ""
+    },
+    {
+      "id": 1777868814657,
+      "portfolio_id": "45a71d28",
+      "ticker": "AAPL",
+      "action": "buy",
+      "shares": 10.0,
+      "price": 150.0,
+      "date": "2026-05-04",
+      "notes": ""
+    }
+  ],
+  "d18ed737": [
+    {
+      "id": 1777868814665,
+      "portfolio_id": "d18ed737",
+      "ticker": "AAPL",
+      "action": "buy",
+      "shares": 10.0,
+      "price": 150.0,
+      "date": "2026-05-04",
+      "notes": ""
+    }
+  ],
+  "6380ff59": [
+    {
+      "id": 1777868814672,
+      "portfolio_id": "6380ff59",
+      "ticker": "AAPL",
+      "action": "buy",
+      "shares": 10.0,
+      "price": 150.0,
+      "date": "2026-05-04",
+      "notes": ""
+    }
+  ],
+  "e8ec4107": [
+    {
+      "id": 1777868814680,
+      "portfolio_id": "e8ec4107",
+      "ticker": "AAPL",
+      "action": "buy",
+      "shares": 10.0,
+      "price": 150.0,
+      "date": "2026-05-04",
+      "notes": ""
+    }
+  ]
+}
