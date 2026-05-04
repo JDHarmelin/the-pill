@@ -20,6 +20,15 @@ class PortfolioManager:
         self._positions_cache = {}
         self._risk_cache = {}
         self._chart_cache = {}
+        self._precomputed_risk = self._load_precomputed_risk()
+
+    def _load_precomputed_risk(self):
+        try:
+            path = os.path.join(os.path.dirname(__file__), "..", "data", "risk_metrics.json")
+            with open(path, "r") as f:
+                return json.load(f)
+        except Exception:
+            return {}
 
     def _invalidate_runtime_caches(self, pid):
         self._positions_cache = {k: v for k, v in self._positions_cache.items() if k[0] != pid}
@@ -217,7 +226,7 @@ class PortfolioManager:
         self._positions_cache[cache_key] = {"value": deepcopy(out), "timestamp": time.time()}
         return out
 
-    def get_summary(self, portfolio_id, positions=None, cash=None):
+    def get_summary(self, portfolio_id, positions=None, cash=None, include_risk=False):
         portfolio = self.get_portfolio(portfolio_id)
         if not portfolio:
             return None
@@ -228,16 +237,16 @@ class PortfolioManager:
         total_gain = total_value - portfolio.get("capital", 0.0)
         total_gain_pct = (total_gain / portfolio["capital"] * 100) if portfolio.get("capital") else 0
 
-        risk = self.calculate_risk_metrics(portfolio_id)
-
-        return {
+        result = {
             "total_value": round(total_value, 2),
             "cash": round(max(0.0, cash), 2),
             "position_value": round(position_value, 2),
             "total_gain": round(total_gain, 2),
             "total_gain_pct": round(total_gain_pct, 2),
-            "risk": risk
         }
+        if include_risk:
+            result["risk"] = self.calculate_risk_metrics(portfolio_id)
+        return result
 
     def calculate_risk_metrics(self, portfolio_id):
         """Calculate Volatility, Beta, and Sharpe Ratio using 1Y of historical data."""
@@ -245,6 +254,11 @@ class PortfolioManager:
         if not portfolio or not portfolio.get("positions"):
             return {"volatility": 0, "beta": 0, "sharpe": 0}
 
+        # 1. Check pre-computed file (instant for default portfolios)
+        if portfolio_id in self._precomputed_risk:
+            return deepcopy(self._precomputed_risk[portfolio_id])
+
+        # 2. Check runtime cache
         cache_key = (portfolio_id, self._portfolio_signature(portfolio))
         cached = self._risk_cache.get(cache_key)
         if cached and (time.time() - cached["timestamp"]) < 900:

@@ -296,7 +296,10 @@ def _get_fast_analysis_bundle(ticker):
 
     fh = get_finnhub_fetcher()
     sf = get_stock_fetcher()
-    sec = get_sec_fetcher()
+
+    # Pre-warm the expensive yfinance .info cache so the parallel calls below
+    # hit memory instead of each triggering a separate HTTP request.
+    _time_call("stock._get_info", lambda: sf._get_info(ticker), ticker=ticker)
 
     from concurrent.futures import ThreadPoolExecutor, as_completed
     results = {}
@@ -305,7 +308,7 @@ def _get_fast_analysis_bundle(ticker):
         "stock_quote": lambda: _time_call("stock.get_quote", lambda: sf.get_quote(ticker), ticker=ticker),
         "company_info": lambda: _time_call("stock.get_company_info", lambda: sf.get_company_info(ticker), ticker=ticker),
         "key_metrics": lambda: _time_call("stock.get_key_metrics", lambda: sf.get_key_metrics(ticker), ticker=ticker),
-        "sec_filing": lambda: _time_call("sec.get_filing", lambda: sec.get_filing(ticker, "10-Q"), ticker=ticker),
+        # SEC filing removed from fast path — loaded lazily via /api/data/sec_filings/<ticker>
     }
     with ThreadPoolExecutor(max_workers=4) as pool:
         futures = {pool.submit(fn): name for name, fn in tasks.items()}
@@ -460,14 +463,17 @@ def run_analysis_streaming(ticker):
 
     if not os.getenv("ANTHROPIC_API_KEY"):
         yield f"data: {json.dumps({'type': 'status', 'message': '⚠️ No AI key found, generating structured fallback...'})}\n\n"
-        compact_financials = _get_compact_financial_bundle(ticker)
-        fallback = _build_fallback_analysis(ticker, fast_bundle, compact_financials)
+        # Skip expensive financial bundle in fallback path — fast_bundle already has
+        # quote, info, and metrics. Structured fallback is readable without full statements.
+        fallback = _build_fallback_analysis(ticker, fast_bundle, compact_financials=None)
         yield f"data: {json.dumps({'type': 'content', 'text': fallback})}\n\n"
         yield f"data: {json.dumps({'type': 'done'})}\n\n"
         return
 
     yield f"data: {json.dumps({'type': 'status', 'message': '🧠 Starting fast analysis...'})}\n\n"
 
+    # Kick off financials fetch in the background so it runs in parallel with the
+    # first AI stream, rather than blocking the first token.
     with ThreadPoolExecutor(max_workers=1) as pool:
         financials_future = pool.submit(_get_compact_financial_bundle, ticker)
 
@@ -484,7 +490,7 @@ Requirements:
 - End with a short 'Awaiting financial enrichment' note."""}]
         if portfolio_context:
             messages[0]["content"] += f"\n\n{portfolio_context}"
-        compact_financials = financials_future.result()
+
         try:
             with _time_call(
                 "claude.fast_stream_setup",
@@ -506,6 +512,10 @@ Requirements:
                         )
                         first_token_seen = True
                     yield f"data: {json.dumps({'type': 'content', 'text': text})}\n\n"
+
+            # Only wait for financials NOW, after the first stream is done.
+            # In the common case they will already be ready.
+            compact_financials = financials_future.result()
 
             yield f"data: {json.dumps({'type': 'status', 'message': '📊 Enriching with compact financial summary...'})}\n\n"
             compact_block = json.dumps(compact_financials, indent=2, default=str)
@@ -535,6 +545,11 @@ Requirements:
                     yield f"data: {json.dumps({'type': 'content', 'text': text})}\n\n"
         except Exception as exc:
             logger.exception("Analysis stream fallback for ticker=%s", ticker)
+            # If financials haven't finished yet, wait for them (or skip)
+            try:
+                compact_financials = financials_future.result(timeout=5)
+            except Exception:
+                compact_financials = None
             fallback = _build_fallback_analysis(ticker, fast_bundle, compact_financials)
             yield f"data: {json.dumps({'type': 'status', 'message': '⚠️ AI unavailable, returning fallback analysis...'})}\n\n"
             yield f"data: {json.dumps({'type': 'content', 'text': fallback})}\n\n"
@@ -735,7 +750,7 @@ def delete_portfolio(pid):
 def get_positions(pid):
     mgr = get_portfolio_mgr()
     positions, cash = mgr.get_positions_with_returns(pid)
-    summary = mgr.get_summary(pid, positions=positions, cash=cash)
+    summary = mgr.get_summary(pid, positions=positions, cash=cash, include_risk=False)
     return jsonify({"positions": positions, "cash": cash, "summary": summary})
 
 
@@ -1288,15 +1303,22 @@ def trading_account():
     if not portfolio:
         return jsonify({"error": "Trading account not found"}), 404
     positions, cash = pm.get_positions_with_returns(pid)
-    summary = pm.get_summary(pid, positions, cash)
-    risk = pm.calculate_risk_metrics(pid)
+    summary = pm.get_summary(pid, positions, cash, include_risk=False)
     return jsonify({
         "portfolio": portfolio,
         "positions": positions,
         "cash": cash,
         "summary": summary,
-        "risk": risk,
     })
+
+
+@app.route("/api/trading/risk-metrics")
+def trading_risk_metrics():
+    """Get risk metrics for the trading account (async-friendly)."""
+    pid = get_trading_portfolio_id()
+    pm = get_portfolio_mgr()
+    risk = pm.calculate_risk_metrics(pid)
+    return jsonify({"risk": risk})
 
 
 @app.route("/api/trading/position-size", methods=["POST"])
@@ -1458,14 +1480,9 @@ def risk_check():
     pm = get_portfolio_mgr()
     positions, _ = pm.get_positions_with_returns(pid)
 
-    # Build sector map
-    sector_map = {}
-    for p in positions:
-        try:
-            info = get_stock_fetcher().get_company_info(p["ticker"])
-            sector_map[p["ticker"]] = info.get("sector", "Unknown")
-        except Exception:
-            sector_map[p["ticker"]] = "Unknown"
+    # Build sector map from cache (instant)
+    from tools.sector_cache import get_sector
+    sector_map = {p["ticker"]: get_sector(p["ticker"]) for p in positions}
 
     from tools.risk_manager import RiskManager
     rm = RiskManager(total_capital=10000.0)

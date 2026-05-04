@@ -17,3 +17,11 @@ dist/
 build/
 *.egg-info/
 .pytest_cache/
+
+# Runtime data caches
+data/prices.json
+data/trades.json
+data/sector_cache.json
+data/alerts.json
+data/nav_snapshots.json
+data/watchlists.json

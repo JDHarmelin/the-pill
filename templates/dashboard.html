@@ -728,6 +728,7 @@
     let mainChart = null;
     let currentTicker = '';
     let sizingData = null;
+    let riskMetrics = {};
     let sortCol = 'gain_pct';
     let sortAsc = false;
 
@@ -740,9 +741,9 @@
             account = data;
             renderAccount();
             renderPositions();
-            renderRisk();
             renderTrades();
             loadMainChart();
+            loadRiskMetrics();
         } catch (e) {
             console.error('Failed to load account:', e);
             $('positionsBody').innerHTML = '<tr><td colspan="9" class="muted" style="text-align:center;padding:30px;">Error loading account</td></tr>';
@@ -835,13 +836,24 @@
 
     // ── Render Risk ───────────────────────────────────────────────────────────
     function renderRisk() {
-        const r = account && account.risk ? account.risk : {};
+        const r = riskMetrics || {};
         $('riskVol').textContent = r.volatility ? fmtN(r.volatility, 1) + '%' : '—';
         $('riskBeta').textContent = r.beta ? fmtN(r.beta, 2) : '—';
         $('riskSharpe').textContent = r.sharpe ? fmtN(r.sharpe, 2) : '—';
         $('riskMaxDD').textContent = r.max_drawdown ? fmtN(r.max_drawdown, 1) + '%' : '—';
         $('riskWinRate').textContent = r.win_rate ? fmtN(r.win_rate, 1) + '%' : '—';
         $('riskPositions').textContent = account ? (account.positions || []).length : '—';
+    }
+
+    async function loadRiskMetrics() {
+        try {
+            const resp = await fetch('/api/trading/risk-metrics');
+            const data = await resp.json();
+            riskMetrics = data.risk || {};
+            renderRisk();
+        } catch (e) {
+            console.error('Failed to load risk metrics:', e);
+        }
     }
 
     // ── Render Trades ─────────────────────────────────────────────────────────

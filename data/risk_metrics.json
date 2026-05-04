@@ -1,0 +1,67 @@
+{
+  "space-satellites": {
+    "volatility": 40.33,
+    "beta": 1.52,
+    "sharpe": 2.96
+  },
+  "defense-military": {
+    "volatility": 20.88,
+    "beta": 0.65,
+    "sharpe": 1.39
+  },
+  "quantum": {
+    "volatility": 37.48,
+    "beta": 1.92,
+    "sharpe": 1.97
+  },
+  "healthcare": {
+    "volatility": 16.0,
+    "beta": 0.45,
+    "sharpe": 0.61
+  },
+  "major-banks": {
+    "volatility": 21.03,
+    "beta": 1.21,
+    "sharpe": 1.44
+  },
+  "fintech": {
+    "volatility": 25.56,
+    "beta": 1.39,
+    "sharpe": -0.39
+  },
+  "ai-hardware": {
+    "volatility": 34.27,
+    "beta": 2.09,
+    "sharpe": 3.06
+  },
+  "real-estate": {
+    "volatility": 13.54,
+    "beta": 0.42,
+    "sharpe": 1.09
+  },
+  "nuclear-uranium": {
+    "volatility": 57.65,
+    "beta": 2.11,
+    "sharpe": 1.79
+  },
+  "dividends": {
+    "volatility": 9.32,
+    "beta": 0.17,
+    "sharpe": 1.77
+  },
+  "bigbox-retail": {
+    "volatility": 18.06,
+    "beta": 0.76,
+    "sharpe": -0.17
+  },
+  "defense-adjacent": {
+    "volatility": 28.57,
+    "beta": 1.15,
+    "sharpe": 1.23
+  },
+  "mag7": {
+    "volatility": 22.73,
+    "beta": 1.51,
+    "sharpe": 1.51
+  }
+}

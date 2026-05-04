@@ -815,13 +815,15 @@
             </tr>`;
             }).join('');
 
-            // Risk metrics
+            // Risk metrics (async-loaded or precomputed; may be absent)
             if (summary && summary.risk) {
                 riskEl.innerHTML = `
                 <div class="risk-item"><span class="risk-label">Vol</span><span class="risk-val">${summary.risk.volatility}%</span></div>
                 <div class="risk-item"><span class="risk-label">Beta</span><span class="risk-val">${summary.risk.beta}</span></div>
                 <div class="risk-item"><span class="risk-label">Sharpe</span><span class="risk-val">${summary.risk.sharpe}</span></div>
             `;
+            } else {
+                riskEl.innerHTML = '<div class="risk-item"><span class="risk-label">Risk</span><span class="risk-val muted">—</span></div>';
             }
         }
 
