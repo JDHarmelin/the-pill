@@ -9,7 +9,6 @@ __pycache__/
 .DS_Store
 *.save
 *.log
-portfolios.db
 .claude/
 get-pip.py
 server.pid

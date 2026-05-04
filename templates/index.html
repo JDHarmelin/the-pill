@@ -11,7 +11,7 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <style>
         * {
             margin: 0;
@@ -25,6 +25,7 @@
             color: #fff;
             min-height: 100vh;
             overflow-x: hidden;
+            font-size: 15px;
         }
 
         /* ── Search Page ── */
@@ -34,11 +35,11 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            padding: 20px;
+            padding: 24px;
         }
 
         .logo {
-            margin-bottom: 60px;
+            margin-bottom: 72px;
             text-align: center;
         }
 
@@ -53,9 +54,9 @@
         }
 
         .logo h1 {
-            font-size: 72px;
+            font-size: 96px;
             font-weight: 700;
-            letter-spacing: -3px;
+            letter-spacing: -4px;
             background: linear-gradient(135deg, #fff 0%, #888 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -63,16 +64,16 @@
         }
 
         .logo .subtitle {
-            font-size: 14px;
+            font-size: 16px;
             color: #666;
             text-transform: uppercase;
-            letter-spacing: 4px;
-            margin-top: 8px;
+            letter-spacing: 5px;
+            margin-top: 10px;
         }
 
         .search-wrapper {
             width: 100%;
-            max-width: 600px;
+            max-width: 680px;
             position: relative;
         }
 
@@ -87,8 +88,8 @@
 
         .search-input {
             width: 100%;
-            padding: 20px 60px 20px 28px;
-            font-size: 18px;
+            padding: 22px 64px 22px 32px;
+            font-size: 20px;
             font-family: inherit;
             background: #050505;
             border: 1px solid #222;
@@ -219,11 +220,12 @@
             background: rgba(0, 0, 0, 0.95);
             backdrop-filter: blur(20px);
             border-bottom: 1px solid #222;
-            padding: 16px 32px;
+            padding: 18px 32px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             z-index: 100;
+            gap: 16px;
         }
 
         .results-header .back-btn {
@@ -231,21 +233,26 @@
             align-items: center;
             gap: 8px;
             color: #888;
-            font-size: 14px;
+            font-size: 15px;
             transition: color 0.2s;
             cursor: pointer;
             background: none;
             border: none;
+            font-family: inherit;
+            padding: 8px 14px;
+            border-radius: 8px;
         }
 
         .results-header .back-btn:hover {
             color: #fff;
+            background: #111;
         }
 
         .results-header .ticker-badge {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 600;
+            letter-spacing: -0.5px;
         }
 
         .results-header .pill-logo {
@@ -254,25 +261,70 @@
             color: #fff;
         }
 
-        /* ── Add to Portfolio Dropdown ── */
+        /* ── Header Actions & Buttons ── */
         .header-actions {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-decoration: none;
+            border: none;
+            white-space: nowrap;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: #888;
+            border: 1px solid #222;
+        }
+        .btn-ghost:hover {
+            background: #111;
+            color: #fff;
+            border-color: #333;
+        }
+
+        .btn-solid {
+            background: #fff;
+            color: #000;
+        }
+        .btn-solid:hover {
+            opacity: 0.85;
+        }
+
+        .btn-accent {
+            background: #0a0a0a;
+            color: #fff;
+            border: 1px solid #1a1a1a;
+        }
+        .btn-accent:hover {
+            background: #111;
+            border-color: #333;
         }
 
         .add-to-pf-btn {
             background: #111;
             color: #fff;
             border: 1px solid #333;
-            padding: 6px 12px;
+            padding: 8px 14px;
             border-radius: 20px;
             font-size: 12px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
             display: none;
-            /* hidden until stock is loaded */
+            font-family: inherit;
         }
 
         .add-to-pf-btn:hover {
@@ -314,32 +366,34 @@
         /* ── Chart Section ── */
         .chart-section {
             display: none;
-            max-width: 900px;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 32px 32px 24px;
+            padding: 40px 32px 32px;
             border-bottom: 1px solid #1a1a1a;
         }
 
         .chart-header {
             display: flex;
-            align-items: flex-start;
+            align-items: flex-end;
             justify-content: space-between;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
         }
 
         .price-display .current-price {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 38px;
+            font-size: 44px;
             font-weight: 500;
-            letter-spacing: -1px;
+            letter-spacing: -1.5px;
             line-height: 1;
         }
 
         .price-display .price-change {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
+            font-size: 15px;
             color: #555;
-            margin-top: 6px;
+            margin-top: 8px;
         }
 
         .price-display .price-change.positive {
@@ -352,7 +406,7 @@
 
         .range-selector {
             display: flex;
-            gap: 2px;
+            gap: 4px;
             align-items: center;
         }
 
@@ -360,12 +414,12 @@
             background: none;
             border: none;
             color: #444;
-            font-size: 12px;
+            font-size: 13px;
             font-family: inherit;
             font-weight: 500;
-            padding: 6px 10px;
+            padding: 8px 14px;
             cursor: pointer;
-            border-radius: 6px;
+            border-radius: 8px;
             transition: all 0.15s;
             letter-spacing: 0.3px;
         }
@@ -380,18 +434,23 @@
             background: #1a1a1a;
         }
 
-        #lwChart {
+        #tvChartContainer {
             width: 100%;
-            height: 260px;
+            height: 480px;
             display: none;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #1a1a1a;
         }
 
         .chart-skeleton {
             width: 100%;
-            height: 260px;
+            height: 480px;
             display: flex;
             align-items: center;
             justify-content: center;
+            border-radius: 12px;
+            border: 1px solid #1a1a1a;
         }
 
         .chart-skeleton-bar {
@@ -402,15 +461,8 @@
         }
 
         @keyframes shimmer {
-
-            0%,
-            100% {
-                opacity: 0.3;
-            }
-
-            50% {
-                opacity: 1;
-            }
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
         }
 
         /* ── Loading / Analysis ── */

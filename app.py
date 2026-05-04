@@ -1481,6 +1481,82 @@ def risk_check():
     })
 
 
+# ── Background Price Refresh ──────────────────────────────────────────────────
+
+def _refresh_prices():
+    """Background thread: refresh price cache every 60s."""
+    import threading
+    import time
+
+    def loop():
+        while True:
+            try:
+                pm = get_portfolio_mgr()
+                portfolios = pm.get_all()
+                tickers = set()
+                for p in portfolios:
+                    for pos in p.get("positions", []):
+                        tickers.add(pos["ticker"].upper())
+                if not tickers:
+                    time.sleep(60)
+                    continue
+
+                from tools.price_cache import get_price_cache
+                from tools.finnhub_fetcher import FinnhubFetcher
+                import yfinance as yf
+
+                cache = get_price_cache()
+                prices = {}
+                ticker_list = sorted(tickers)
+
+                # Batch yfinance
+                try:
+                    raw = yf.download(ticker_list, period="5d", interval="1d",
+                                     progress=False, auto_adjust=True, threads=False)["Close"]
+                    if isinstance(raw, pd.Series):
+                        raw = raw.to_frame(name=ticker_list[0])
+                    for t in ticker_list:
+                        if t in raw.columns:
+                            series = raw[t].dropna()
+                            if not series.empty:
+                                prices[t] = {"price": float(series.iloc[-1])}
+                except Exception:
+                    pass
+
+                # Finnhub for missing
+                missing = [t for t in ticker_list if t not in prices]
+                if missing:
+                    try:
+                        fh = FinnhubFetcher()
+                        for t in missing:
+                            try:
+                                q = fh.get_realtime_quote(t)
+                                if q.get("price") and q["price"] > 0:
+                                    prices[t] = {
+                                        "price": float(q["price"]),
+                                        "change": q.get("change"),
+                                        "change_percent": q.get("change_percent"),
+                                    }
+                            except Exception:
+                                pass
+                    except Exception:
+                        pass
+
+                if prices:
+                    cache.set_batch(prices)
+            except Exception as e:
+                print(f"[price-refresh] error: {e}")
+            time.sleep(60)
+
+    t = threading.Thread(target=loop, daemon=True, name="price-refresh")
+    t.start()
+    print("[price-refresh] background thread started")
+
+
+# Start background price refresh (runs once per worker process)
+_refresh_prices()
+
+
 # ── Main ────────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":

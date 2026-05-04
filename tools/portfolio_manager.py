@@ -5,12 +5,25 @@ Data persists in SQLite via db.Database.
 
 import os
 import time
+import json
 from copy import deepcopy
 from datetime import datetime
 import yfinance as yf
 import pandas as pd
 
 from db import Database
+
+# ── Load default portfolios from file (fast, no seeding delay) ───────────────
+_DEFAULTS_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "portfolios.json")
+
+def _load_default_portfolios():
+    try:
+        with open(_DEFAULTS_PATH, "r") as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+_DEFAULT_PORTFOLIOS = _load_default_portfolios()
 
 # ── Default sector portfolios ($10K each, equal-weight) ──────────────────────
 
@@ -376,27 +389,40 @@ class PortfolioManager:
         tickers = [p["ticker"] for p in positions]
         prices = {}
 
-        # Batch download from yfinance
+        # 1. Try price cache first (instant)
         try:
-            raw = yf.download(tickers, period="5d", interval="1d",
-                              progress=False, auto_adjust=True, threads=False)["Close"]
-            if isinstance(raw, pd.Series):
-                raw = raw.to_frame(name=tickers[0])
+            from tools.price_cache import get_price_cache
+            cache = get_price_cache()
             for t in tickers:
-                if t in raw.columns:
-                    series = raw[t].dropna()
-                    if not series.empty:
-                        prices[t] = float(series.iloc[-1])
+                cp = cache.get_price(t)
+                if cp:
+                    prices[t] = cp
         except Exception:
             pass
 
-        # Fallback: use Finnhub for any missing tickers
+        # 2. Fallback: batch download from yfinance for cache misses
         missing = [t for t in tickers if t not in prices]
         if missing:
             try:
+                raw = yf.download(missing, period="5d", interval="1d",
+                                  progress=False, auto_adjust=True, threads=False)["Close"]
+                if isinstance(raw, pd.Series):
+                    raw = raw.to_frame(name=missing[0])
+                for t in missing:
+                    if t in raw.columns:
+                        series = raw[t].dropna()
+                        if not series.empty:
+                            prices[t] = float(series.iloc[-1])
+            except Exception:
+                pass
+
+        # 3. Final fallback: Finnhub for any still missing
+        still_missing = [t for t in tickers if t not in prices]
+        if still_missing:
+            try:
                 from tools.finnhub_fetcher import FinnhubFetcher
                 fh = FinnhubFetcher()
-                for t in missing:
+                for t in still_missing:
                     try:
                         quote = fh.get_realtime_quote(t)
                         if quote.get("price") and quote["price"] > 0:
