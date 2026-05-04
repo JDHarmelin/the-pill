@@ -7,7 +7,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+    <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js" onerror="window.lwcFailed=true"></script>
+    <script>
+      if (typeof LightweightCharts === 'undefined' && !window.lwcFailed) {
+        window.lwcFailed = true;
+      }
+    </script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -1117,6 +1122,10 @@
     // ── Main Chart ──────────────────────────────────────────────────────────────
     async function loadMainChart() {
         const container = $('mainChart');
+        if (typeof LightweightCharts === 'undefined') {
+            container.innerHTML = '<div class="chart-loading">Chart library unavailable. Please refresh.</div>';
+            return;
+        }
         container.innerHTML = '<div class="chart-loading">Loading chart…</div>';
         if (mainChart) { try { mainChart.remove(); } catch(e){} mainChart = null; }
 
