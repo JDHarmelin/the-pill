@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sector ETF Viewer — The Pill</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #000;
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        /* ── Header ── */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            border-bottom: 1px solid #111;
+            position: sticky;
+            top: 0;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(12px);
+            z-index: 100;
+        }
+
+        .back-btn {
+            color: #555;
+            text-decoration: none;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color .15s;
+        }
+
+        .back-btn:hover {
+            color: #fff;
+        }
+
+        .page-title {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #fff;
+        }
+
+        /* ── Sector Ranking Bar ── */
+        .sector-ranking {
+            display: flex;
+            gap: 6px;
+            padding: 12px 24px;
+            overflow-x: auto;
+            border-bottom: 1px solid #0a0a0a;
+            scrollbar-width: none;
+        }
+
+        .sector-ranking::-webkit-scrollbar {
+            display: none;
+        }
+
+        .rank-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid #1a1a1a;
+            background: #0a0a0a;
+            font-size: 11px;
+            font-weight: 500;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all .15s;
+            text-decoration: none;
+            color: #888;
+        }
+
+        .rank-chip:hover {
+            border-color: #333;
+            color: #fff;
+        }
+
+        .rank-chip .rank-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: #444;
+            min-width: 16px;
+        }
+
+        .rank-chip .rank-return {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .rank-chip .rank-return.positive {
+            color: #4ade80;
+        }
+
+        .rank-chip .rank-return.negative {
+            color: #f87171;
+        }
+
+        /* ── Portfolio Grid ── */
+        .portfolios-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding: 0;
+            max-width: 100%;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        /* ── Portfolio Card ── */
+        .portfolio-card {
+            border-bottom: 1px solid #111;
+            background: #000;
+        }
+
+        .portfolio-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            cursor: pointer;
+            transition: background .1s;
+        }
+
+        .portfolio-header:hover {
+            background: #050505;
+        }
+
+        .portfolio-name-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .portfolio-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .position-count {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: #444;
+        }
+
+        .portfolio-stats {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .stat-return {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .stat-return.positive {
+            color: #4ade80;
+        }
+
+        .stat-return.negative {
+            color: #f87171;
+        }
+
+        .stat-capital {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: #333;
+        }
+
+        /* ── Expanded Body ── */
+        .portfolio-body {
+            display: none;
+            border-top: 1px solid #0a0a0a;
+        }
+
+        .portfolio-body.open {
+            display: block;
+        }
+
+        /* ── Position Table ── */
+        .pos-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .pos-table thead th {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #333;
+            padding: 10px 12px;
+            text-align: right;
+            border-bottom: 1px solid #111;
+            position: sticky;
+            top: 60px;
+            background: #000;
+            z-index: 5;
+        }
+
+        .pos-table thead th:first-child {
+            text-align: left;
+            padding-left: 24px;
+        }
+
+        .pos-table thead th:last-child {
+            padding-right: 24px;
+        }
+
+        .pos-table tbody tr {
+            border-bottom: 1px solid #080808;
+            transition: background .1s;
+            cursor: pointer;
+        }
+
+        .pos-table tbody tr:hover {
+            background: #060606;
+        }
+
+        .pos-table td {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            padding: 10px 12px;
+            text-align: right;
+            color: #888;
+        }
+
+        .pos-table td:first-child {
+            text-align: left;
+            padding-left: 24px;
+        }
+
+        .pos-table td:last-child {
+            padding-right: 24px;
+        }
+
+        .pos-table .ticker-cell {
+            font-weight: 600;
+            color: #fff;
+            font-size: 12px;
+        }
+
+        .pos-table .gain-cell.positive {
+            color: #4ade80;
+        }
+
+        .pos-table .gain-cell.negative {
+            color: #f87171;
+        }
+
+        /* ── Chart Area ── */
+        .chart-section {
+            padding: 0 24px 16px;
+        }
+
+        .chart-controls {
+            display: flex;
+            justify-content: flex-end;
+            gap: 2px;
+            padding: 12px 0 8px;
+        }
+
+        .range-btn {
+            background: none;
+            border: none;
+            color: #333;
+            font-size: 11px;
+            font-family: inherit;
+            font-weight: 500;
+            padding: 5px 9px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all .15s;
+        }
+
+        .range-btn:hover {
+            color: #888;
+        }
+
+        .range-btn.active {
+            color: #fff;
+            background: #111;
+        }
+
+        .chart-canvas {
+            width: 100%;
+            height: 200px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .chart-error {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            color: #222;
+            font-size: 12px;
+        }
+
+        .chart-loading {
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #222;
+            font-size: 12px;
+        }
+
+        /* ── Risk Row ── */
+        .risk-row {
+            display: flex;
+            gap: 24px;
+            padding: 12px 24px;
+            border-top: 1px solid #0a0a0a;
+        }
+
+        .risk-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .risk-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #333;
+        }
+
+        .risk-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* ── Footer Actions ── */
+        .card-footer {
+            display: flex;
+            gap: 8px;
+            padding: 12px 24px;
+            border-top: 1px solid #0a0a0a;
+        }
+
+        .action-btn {
+            font-family: inherit;
+            font-size: 11px;
+            font-weight: 500;
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all .15s;
+            border: 1px solid #1a1a1a;
+            background: none;
+            color: #444;
+        }
+
+        .action-btn:hover {
+            border-color: #333;
+            color: #fff;
+        }
+
+        .action-btn.danger:hover {
+            border-color: #f87171;
+            color: #f87171;
+        }
+
+        /* ── Add Stock Form ── */
+        .add-form-inline {
+            display: none;
+            gap: 6px;
+            padding: 8px 24px 12px;
+            align-items: center;
+        }
+
+        .add-form-inline.open {
+            display: flex;
+        }
+
+        .add-input {
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 6px;
+            color: #fff;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            outline: none;
+            transition: border-color .15s;
+        }
+
+        .add-input:focus {
+            border-color: #333;
+        }
+
+        .add-input::placeholder {
+            color: #333;
+        }
+
+        .add-input.ticker-input {
+            width: 80px;
+        }
+
+        .add-input.shares-input {
+            width: 70px;
+        }
+
+        .add-input.price-input {
+            width: 80px;
+        }
+
+        .add-submit {
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .add-cancel {
+            background: none;
+            color: #444;
+            border: 1px solid #1a1a1a;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        /* ── Autocomplete ── */
+        .ac-wrap {
+            position: relative;
+        }
+
+        .ac-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 8px;
+            min-width: 220px;
+            max-height: 180px;
+            overflow-y: auto;
+            z-index: 50;
+            margin-top: 4px;
+        }
+
+        .ac-item {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 8px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #1a1a1a;
+            transition: background .1s;
+        }
+
+        .ac-item:last-child {
+            border-bottom: none;
+        }
+
+        .ac-item:hover,
+        .ac-item.hl {
+            background: #1a1a1a;
+        }
+
+        .ac-sym {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
+            color: #fff;
+            min-width: 50px;
+        }
+
+        .ac-name {
+            color: #555;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .page-header {
+                padding: 12px 16px;
+            }
+
+            .portfolio-header {
+                padding: 12px 16px;
+            }
+
+            .pos-table thead th:first-child,
+            .pos-table td:first-child {
+                padding-left: 16px;
+            }
+
+            .pos-table thead th:last-child,
+            .pos-table td:last-child {
+                padding-right: 16px;
+            }
+
+            .chart-section {
+                padding: 0 16px 12px;
+            }
+
+            .risk-row {
+                padding: 10px 16px;
+            }
+
+            .card-footer {
+                padding: 10px 16px;
+            }
+
+            .sector-ranking {
+                padding: 10px 16px;
+            }
+        }
+
+        /* ── New portfolio form ── */
+        .new-form-bar {
+            display: none;
+            padding: 12px 24px;
+            gap: 8px;
+            align-items: center;
+            border-bottom: 1px solid #111;
+        }
+
+        .new-form-bar.open {
+            display: flex;
+        }
+
+        .new-btn {
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="page-header">
+        <a href="/" class="back-btn" onclick="event.preventDefault(); window.location.href='/';">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+            Search
+        </a>
+        <span class="page-title">Sector Portfolios</span>
+        <button class="new-btn" onclick="toggleNewForm()">+ New</button>
+    </header>
+
+    <!-- Sector ranking strip -->
+    <div class="sector-ranking" id="sectorRanking"></div>
+
+    <!-- New portfolio form -->
+    <div class="new-form-bar" id="newFormBar">
+        <input class="add-input" id="newName" placeholder="Portfolio name" style="width:180px">
+        <input class="add-input" id="newCapital" type="number" placeholder="10000" style="width:100px">
+        <button class="add-submit" onclick="createPortfolio()">Create</button>
+        <button class="add-cancel" onclick="toggleNewForm()">Cancel</button>
+    </div>
+
+    <div class="portfolios-container" id="portfoliosContainer">
+        <div class="empty-state">Loading portfolios…</div>
+    </div>
+
+    <script>
+        // ── State ─────────────────────────────────────────────────────────────────
+        const chartsMap = {};
+        const dataCache = {};  // pid -> { positions, cash, summary }
+        const openCards = {};  // pid -> boolean
+        let allPortfolios = [];
+        let showingNewForm = false;
+
+        // ── Helpers ───────────────────────────────────────────────────────────────
+        function fmt(n, d = 2) {
+            if (n == null) return '—';
+            return n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+        }
+        function fmtD(n) { return n == null ? '—' : '$' + fmt(Math.abs(n)); }
+        function sign(n) { return n >= 0 ? '+' : '-'; }
+        function cls(n) { return n == null ? '' : (n >= 0 ? 'positive' : 'negative'); }
+
+        // ── New Portfolio ─────────────────────────────────────────────────────────
+        function toggleNewForm() {
+            showingNewForm = !showingNewForm;
+            document.getElementById('newFormBar').classList.toggle('open', showingNewForm);
+            if (showingNewForm) document.getElementById('newName').focus();
+        }
+
+        async function createPortfolio() {
+            const name = document.getElementById('newName').value.trim();
+            const capital = parseFloat(document.getElementById('newCapital').value) || 10000;
+            if (!name) return;
+            await fetch('/api/portfolios', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, capital })
+            });
+            document.getElementById('newName').value = '';
+            document.getElementById('newCapital').value = '';
+            toggleNewForm();
+            loadPortfolios();
+        }
+
+        // ── Load All ──────────────────────────────────────────────────────────────
+        async function loadPortfolios() {
+            const resp = await fetch('/api/portfolios');
+            const data = await resp.json();
+            allPortfolios = data.portfolios || [];
+            const container = document.getElementById('portfoliosContainer');
+
+            if (!allPortfolios.length) {
+                container.innerHTML = '<div class="empty-state">No portfolios yet.</div>';
+                return;
+            }
+
+            container.innerHTML = allPortfolios.map(p => buildCardHTML(p)).join('');
+
+            // Load data for all portfolios sequentially to avoid crushing the backend (OS file descriptor limits)
+            for (const p of allPortfolios) {
+                await loadPortfolioData(p.id);
+            }
+        }
+
+        function buildCardHTML(p) {
+            const isOpen = openCards[p.id] || false;
+            return `
+        <div class="portfolio-card" id="card-${p.id}">
+            <div class="portfolio-header" onclick="toggleCard('${p.id}')">
+                <div class="portfolio-name-wrap">
+                    <span class="portfolio-name">${p.name}</span>
+                    <span class="position-count">${p.positions.length} positions</span>
+                </div>
+                <div class="portfolio-stats" id="stats-${p.id}">
+                    <span class="stat-capital">$${fmt(p.capital, 0)} basis</span>
+                    <span class="stat-value">—</span>
+                </div>
+            </div>
+            <div class="portfolio-body${isOpen ? ' open' : ''}" id="body-${p.id}">
+                <table class="pos-table">
+                    <thead>
+                        <tr>
+                            <th>Ticker</th>
+                            <th>Shares</th>
+                            <th>Avg Cost</th>
+                            <th>Price</th>
+                            <th>Cost Basis</th>
+                            <th>Mkt Value</th>
+                            <th>P&L $</th>
+                            <th>P&L %</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-${p.id}">
+                        <tr><td colspan="8" style="text-align:center;color:#222;padding:20px">Loading…</td></tr>
+                    </tbody>
+                </table>
+                <div class="chart-section" id="chart-section-${p.id}">
+                    <div class="chart-controls" id="ranges-${p.id}">
+                        ${['1d', '1w', '1m', '3m', '6m', 'ytd', '1y'].map(r =>
+                `<button class="range-btn${r === '1y' ? ' active' : ''}"
+                                onclick="loadChart('${p.id}','${r}')"
+                                data-range="${r}">${r.toUpperCase()}</button>`
+            ).join('')}
+                    </div>
+                    <div class="chart-canvas" id="chart-${p.id}">
+                        <div class="chart-loading">Loading chart…</div>
+                    </div>
+                </div>
+                <div class="risk-row" id="risk-${p.id}"></div>
+                <div class="card-footer">
+                    <button class="action-btn" onclick="event.stopPropagation(); toggleAddForm('${p.id}')">+ Add Stock</button>
+                    <button class="action-btn" onclick="event.stopPropagation(); exportCSV('${p.id}', 'positions')">Export CSV</button>
+                    <button class="action-btn danger" onclick="event.stopPropagation(); deletePortfolio('${p.id}')">Delete</button>
+                </div>
+                <div class="add-form-inline" id="add-form-${p.id}">
+                    <div class="ac-wrap">
+                        <input class="add-input ticker-input" id="add-ticker-${p.id}" placeholder="AAPL"
+                            autocomplete="off" oninput="acSearch('${p.id}', this.value)"
+                            onkeydown="acKeydown(event, '${p.id}')">
+                        <div class="ac-dropdown" id="ac-dd-${p.id}"></div>
+                    </div>
+                    <input class="add-input shares-input" id="add-shares-${p.id}" placeholder="Shares" type="number" step="any">
+                    <input class="add-input price-input" id="add-price-${p.id}" placeholder="Price" type="number" step="any">
+                    <button class="add-submit" onclick="confirmAdd('${p.id}')">Add</button>
+                    <button class="add-cancel" onclick="toggleAddForm('${p.id}')">Cancel</button>
+                </div>
+            </div>
+        </div>`;
+        }
+
+        // ── Toggle card expand ────────────────────────────────────────────────────
+        function toggleCard(pid) {
+            openCards[pid] = !openCards[pid];
+            const body = document.getElementById(`body-${pid}`);
+            body.classList.toggle('open', openCards[pid]);
+            if (openCards[pid]) {
+                // Always load chart when expanding (refresh data)
+                loadChart(pid, getActiveRange(pid));
+            }
+        }
+
+        function getActiveRange(pid) {
+            const active = document.querySelector(`#ranges-${pid} .range-btn.active`);
+            return active ? active.dataset.range : '1y';
+        }
+
+        // ── Load positions data ───────────────────────────────────────────────────
+        async function loadPortfolioData(pid) {
+            try {
+                const resp = await fetch(`/api/portfolios/${pid}/positions`);
+                const data = await resp.json();
+                dataCache[pid] = data;
+                renderPositions(pid, data.positions, data.cash, data.summary);
+                updateRanking();
+            } catch (e) {
+                const tbody = document.getElementById(`tbody-${pid}`);
+                if (tbody) tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#333;padding:20px">Failed to load</td></tr>';
+            }
+        }
+
+        function renderPositions(pid, positions, cash, summary) {
+            const tbody = document.getElementById(`tbody-${pid}`);
+            const statsEl = document.getElementById(`stats-${pid}`);
+            const riskEl = document.getElementById(`risk-${pid}`);
+
+            // Update header stats
+            if (summary) {
+                const s = sign(summary.total_gain);
+                statsEl.innerHTML = `
+                <span class="stat-capital">$${fmt(10000, 0)} basis</span>
+                <span class="stat-value">${fmtD(summary.total_value)}</span>
+                <span class="stat-return ${cls(summary.total_gain)}">
+                    ${s}${fmtD(summary.total_gain)} (${s}${fmt(Math.abs(summary.total_gain_pct))}%)
+                </span>
+            `;
+            }
+
+            // Build table rows
+            if (!positions.length) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#222;padding:20px">No positions</td></tr>';
+                return;
+            }
+
+            // Sort by P&L % descending
+            const sorted = [...positions].sort((a, b) => (b.gain_pct || 0) - (a.gain_pct || 0));
+
+            tbody.innerHTML = sorted.map(p => {
+                const costBasis = p.cost_basis || (p.shares * p.avg_cost);
+                const mktVal = p.current_value || costBasis;
+                const gain = p.gain || 0;
+                const gainPct = p.gain_pct || 0;
+                const price = p.current_price;
+                return `
+            <tr onclick="analyzeTicker('${p.ticker}')">
+                <td class="ticker-cell">${p.ticker}</td>
+                <td>${fmt(p.shares, 2)}</td>
+                <td>$${fmt(p.avg_cost)}</td>
+                <td>${price != null ? '$' + fmt(price) : '—'}</td>
+                <td>$${fmt(costBasis)}</td>
+                <td>$${fmt(mktVal)}</td>
+                <td class="gain-cell ${cls(gain)}">${sign(gain)}$${fmt(Math.abs(gain))}</td>
+                <td class="gain-cell ${cls(gainPct)}">${sign(gainPct)}${fmt(Math.abs(gainPct))}%</td>
+            </tr>`;
+            }).join('');
+
+            // Risk metrics
+            if (summary && summary.risk) {
+                riskEl.innerHTML = `
+                <div class="risk-item"><span class="risk-label">Vol</span><span class="risk-val">${summary.risk.volatility}%</span></div>
+                <div class="risk-item"><span class="risk-label">Beta</span><span class="risk-val">${summary.risk.beta}</span></div>
+                <div class="risk-item"><span class="risk-label">Sharpe</span><span class="risk-val">${summary.risk.sharpe}</span></div>
+            `;
+            }
+        }
+
+        // ── Sector Ranking Strip ──────────────────────────────────────────────────
+        function updateRanking() {
+            const ranking = allPortfolios
+                .filter(p => dataCache[p.id] && dataCache[p.id].summary)
+                .map(p => ({
+                    id: p.id,
+                    name: p.name,
+                    ret: dataCache[p.id].summary.total_gain_pct
+                }))
+                .sort((a, b) => b.ret - a.ret);
+
+            const el = document.getElementById('sectorRanking');
+            el.innerHTML = ranking.map((r, i) => `
+            <a class="rank-chip" href="#card-${r.id}" onclick="event.preventDefault(); openAndScroll('${r.id}')">
+                <span class="rank-num">#${i + 1}</span>
+                <span>${r.name}</span>
+                <span class="rank-return ${cls(r.ret)}">${sign(r.ret)}${fmt(Math.abs(r.ret))}%</span>
+            </a>
+        `).join('');
+        }
+
+        function openAndScroll(pid) {
+            if (!openCards[pid]) toggleCard(pid);
+            document.getElementById(`card-${pid}`).scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // ── Chart ─────────────────────────────────────────────────────────────────
+        async function loadChart(pid, range) {
+            // Update active button
+            document.querySelectorAll(`#ranges-${pid} .range-btn`).forEach(b =>
+                b.classList.toggle('active', b.dataset.range === range)
+            );
+
+            const canvasEl = document.getElementById(`chart-${pid}`);
+            canvasEl.innerHTML = '<div class="chart-loading">Loading chart…</div>';
+
+            // Destroy old chart
+            if (chartsMap[pid]) {
+                try { chartsMap[pid].remove(); } catch (e) { }
+                delete chartsMap[pid];
+            }
+
+            try {
+                const resp = await fetch(`/api/portfolios/${pid}/chart?range=${range}`);
+                if (!resp.ok) {
+                    canvasEl.innerHTML = `<div class="chart-error">Server error (${resp.status})</div>`;
+                    return;
+                }
+                const data = await resp.json();
+
+                if (data.error || !data.data || !data.data.length) {
+                    canvasEl.innerHTML = `<div class="chart-error">${data.error || 'No chart data'}</div>`;
+                    return;
+                }
+
+                const isPos = (data.period_change_pct || 0) >= 0;
+                const lineColor = isPos ? '#4ade80' : '#f87171';
+                const topColor = isPos ? 'rgba(74,222,128,0.08)' : 'rgba(248,113,113,0.08)';
+
+                canvasEl.innerHTML = '';
+
+                const chart = LightweightCharts.createChart(canvasEl, {
+                    width: canvasEl.clientWidth,
+                    height: 200,
+                    layout: { background: { type: 'solid', color: '#000' }, textColor: '#333' },
+                    grid: { vertLines: { visible: false }, horzLines: { color: '#0a0a0a' } },
+                    rightPriceScale: { borderVisible: false, textColor: '#333' },
+                    timeScale: { borderVisible: false, textColor: '#333', fixLeftEdge: true, fixRightEdge: true },
+                    crosshair: {
+                        horzLine: { visible: false, labelVisible: false },
+                        vertLine: { color: '#1a1a1a', style: 1, labelVisible: false },
+                    },
+                    handleScroll: false,
+                    handleScale: false,
+                });
+
+                const series = chart.addAreaSeries({
+                    lineColor, topColor,
+                    bottomColor: 'rgba(0,0,0,0)',
+                    lineWidth: 1.5,
+                    crosshairMarkerVisible: true,
+                    crosshairMarkerRadius: 3,
+                    crosshairMarkerBorderColor: '#000',
+                    priceLineVisible: false,
+                    lastValueVisible: false,
+                });
+
+                // Ensure data is properly formatted
+                const chartData = data.data
+                    .map(d => ({ time: d.time, value: d.value }))
+                    .filter(d => d.value != null && d.value > 0);
+
+                if (chartData.length === 0) {
+                    canvasEl.innerHTML = '<div class="chart-error">No valid data points</div>';
+                    return;
+                }
+
+                series.setData(chartData);
+                chart.timeScale().fitContent();
+                chartsMap[pid] = chart;
+
+                // Resize observer
+                new ResizeObserver(() => {
+                    if (chartsMap[pid]) {
+                        chartsMap[pid].applyOptions({ width: canvasEl.clientWidth });
+                    }
+                }).observe(canvasEl);
+
+            } catch (e) {
+                canvasEl.innerHTML = '<div class="chart-error">Chart unavailable</div>';
+                console.error('Chart error for', pid, e);
+            }
+        }
+
+        // ── Navigate to analysis ──────────────────────────────────────────────────
+        function analyzeTicker(ticker) {
+            window.location.href = `/?ticker=${encodeURIComponent(ticker)}`;
+        }
+
+        // ── Delete portfolio ──────────────────────────────────────────────────────
+        async function deletePortfolio(pid) {
+            if (!confirm('Delete this portfolio?')) return;
+            await fetch(`/api/portfolios/${pid}`, { method: 'DELETE' });
+            if (chartsMap[pid]) { chartsMap[pid].remove(); delete chartsMap[pid]; }
+            loadPortfolios();
+        }
+
+        // ── Add Stock ─────────────────────────────────────────────────────────────
+        function toggleAddForm(pid) {
+            const form = document.getElementById(`add-form-${pid}`);
+            form.classList.toggle('open');
+            if (form.classList.contains('open')) {
+                document.getElementById(`add-ticker-${pid}`).focus();
+            }
+        }
+
+        async function confirmAdd(pid) {
+            const ticker = document.getElementById(`add-ticker-${pid}`).value.trim().toUpperCase();
+            let shares = parseFloat(document.getElementById(`add-shares-${pid}`).value);
+            const price = parseFloat(document.getElementById(`add-price-${pid}`).value);
+
+            if (!ticker) return;
+            if (isNaN(shares) || shares <= 0) shares = 1;
+
+            const payload = { ticker, shares };
+            if (!isNaN(price) && price > 0) {
+                payload.avg_cost = price;
+            }
+
+            await fetch(`/api/portfolios/${pid}/positions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            toggleAddForm(pid);
+            document.getElementById(`add-ticker-${pid}`).value = '';
+            document.getElementById(`add-shares-${pid}`).value = '';
+            document.getElementById(`add-price-${pid}`).value = '';
+            loadPortfolioData(pid);
+        }
+
+        // ── Autocomplete ──────────────────────────────────────────────────────────
+        const acTimers = {}, acData = {}, acHl = {};
+
+        async function acSearch(pid, q) {
+            clearTimeout(acTimers[pid]);
+            if (!q) { hideAC(pid); return; }
+            acTimers[pid] = setTimeout(async () => {
+                try {
+                    const resp = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+                    const data = await resp.json();
+                    acData[pid] = data.results || [];
+                    acHl[pid] = -1;
+                    renderAC(pid);
+                } catch { hideAC(pid); }
+            }, 200);
+        }
+
+        function renderAC(pid) {
+            const el = document.getElementById(`ac-dd-${pid}`);
+            const results = acData[pid] || [];
+            if (!results.length) { el.style.display = 'none'; return; }
+            el.innerHTML = results.map((r, i) =>
+                `<div class="ac-item${i === acHl[pid] ? ' hl' : ''}" onmousedown="acSelect(event,'${pid}',${i})">
+                <span class="ac-sym">${r.symbol}</span>
+                <span class="ac-name">${r.name}</span>
+            </div>`
+            ).join('');
+            el.style.display = 'block';
+        }
+
+        function hideAC(pid) {
+            const el = document.getElementById(`ac-dd-${pid}`);
+            if (el) el.style.display = 'none';
+        }
+
+        async function acSelect(e, pid, i) {
+            e.preventDefault();
+            const r = acData[pid][i];
+            if (!r) return;
+            document.getElementById(`add-ticker-${pid}`).value = r.symbol;
+            hideAC(pid);
+            try {
+                const resp = await fetch(`/api/price/${r.symbol}`);
+                const data = await resp.json();
+                if (data.price) document.getElementById(`add-price-${pid}`).value = data.price;
+            } catch { }
+            document.getElementById(`add-shares-${pid}`).focus();
+        }
+
+        function acKeydown(e, pid) {
+            const items = acData[pid] || [];
+            if (!items.length) return;
+            if (e.key === 'ArrowDown') { e.preventDefault(); acHl[pid] = Math.min((acHl[pid] || 0) + 1, items.length - 1); renderAC(pid); }
+            else if (e.key === 'ArrowUp') { e.preventDefault(); acHl[pid] = Math.max((acHl[pid] || 0) - 1, 0); renderAC(pid); }
+            else if (e.key === 'Enter' && acHl[pid] >= 0) { e.preventDefault(); acSelect({ preventDefault: () => { } }, pid, acHl[pid]); }
+            else if (e.key === 'Escape') hideAC(pid);
+        }
+
+        document.addEventListener('click', e => {
+            document.querySelectorAll('.ac-dropdown').forEach(el => {
+                if (!el.contains(e.target)) el.style.display = 'none';
+            });
+        });
+
+        // ── Export ────────────────────────────────────────────────────────────────
+        async function exportCSV(pid, type) {
+            const resp = await fetch(`/api/portfolios/${pid}/export/${type}?format=csv`);
+            const blob = await resp.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${pid}_${type}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // ── Keyboard shortcuts ──────────────────────────────────────────────────
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT') return;
+            if (e.key === '/') {
+                e.preventDefault();
+                // Focus first add-ticker input in any open card
+                const openCard = document.querySelector('.portfolio-body.open');
+                if (openCard) {
+                    const input = openCard.querySelector('.ticker-input');
+                    if (input) input.focus();
+                }
+            }
+            if (e.key === 'Escape') {
+                // Close all autocomplete dropdowns
+                document.querySelectorAll('.ac-dropdown').forEach(el => el.style.display = 'none');
+            }
+            if (e.key === 'n' || e.key === 'N') {
+                toggleNewForm();
+            }
+        });
+
+        // ── Boot ──────────────────────────────────────────────────────────────────
+        loadPortfolios();
+    </script>
+</body>
+
+</html>

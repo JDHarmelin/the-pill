@@ -32,17 +32,24 @@ def main():
     load_dotenv()
 
     api_key = os.getenv('ANTHROPIC_API_KEY')
-    if not api_key or api_key == 'your-api-key-here':
-        print("\n⚠️  ANTHROPIC_API_KEY not set!")
-        print("   Edit your .env file and add your API key.")
-        print("   Get one at: https://console.anthropic.com/")
-        sys.exit(1)
+    finnhub_key = os.getenv('FINNHUB_API_KEY')
+    if (not api_key or api_key == 'your-api-key-here') and (not finnhub_key or finnhub_key == 'your-finnhub-api-key-here'):
+        print("\n  Note: No API keys found. Running in degraded mode.")
+        print("        - AI analysis will use a structured fallback")
+        print("        - Real-time prices will use Yahoo Finance")
+        print("        Add keys to .env for full features.")
+    elif not api_key or api_key == 'your-api-key-here':
+        print("\n  Note: ANTHROPIC_API_KEY not set.")
+        print("        AI analysis will use a structured fallback.")
+    elif not finnhub_key or finnhub_key == 'your-finnhub-api-key-here':
+        print("\n  Note: FINNHUB_API_KEY not set.")
+        print("        Real-time prices will use Yahoo Finance.")
 
     # Check dependencies
     try:
-        import flask
-        import anthropic
-        import yfinance
+        import flask      # noqa: F401
+        import anthropic  # noqa: F401
+        import yfinance   # noqa: F401
     except ImportError as e:
         print(f"\n⚠️  Missing dependency: {e}")
         print("   Installing requirements...")
@@ -54,12 +61,12 @@ def main():
     print("  💊 THE PILL - Shkreli Method Stock Analysis")
     print("="*50)
     print("\n  Starting server...")
-    print("  Open: http://localhost:5000")
+    print("  Open: http://localhost:8080")
     print("  Press Ctrl+C to stop\n")
 
     # Import and run
     from app import app
-    app.run(debug=True, port=5000, use_reloader=False)
+    app.run(debug=True, host="0.0.0.0", port=8080, use_reloader=False, threaded=True)
 
 
 if __name__ == '__main__':
